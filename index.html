@@ -1,0 +1,1651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AVN Arogya Healthcare – Insurance Accounts Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--green:#00b050;--green-dark:#007a36;--green-light:#e6f7ed;--bg:#f4f6f9;--card:#fff;--border:#e0e6ed;--text:#1a2332;--muted:#6b7a8d;--accent:#0077cc;--orange:#e87722;--red:#d93025;--yellow:#f9ab00;--purple:#7b2fbe}
+body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text);font-size:13px}
+.hdr{background:linear-gradient(135deg,#003d1a 0%,#006b2e 50%,#00a84f 100%);color:#fff;padding:16px 28px;display:flex;align-items:center;justify-content:space-between}
+.hdr-left h1{font-size:21px;font-weight:700;letter-spacing:.5px}
+.hdr-left p{font-size:11px;opacity:.85;margin-top:3px}
+.hdr-right{text-align:right;font-size:11px;opacity:.9}
+.hdr-right strong{font-size:13px}
+.nav{background:#fff;border-bottom:2px solid var(--green);display:flex;gap:0;overflow-x:auto;padding:0 16px}
+.nav button{background:none;border:none;padding:10px 14px;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;transition:.2s}
+.nav button.active{color:var(--green-dark);border-bottom-color:var(--green)}
+.nav button:hover{color:var(--green-dark)}
+.content{padding:14px 18px}
+.page{display:none}.page.active{display:block}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:11px;margin-bottom:14px}
+.kpi{background:var(--card);border-radius:10px;padding:12px 14px;border-left:4px solid var(--green);box-shadow:0 1px 4px rgba(0,0,0,.07);cursor:default}
+.kpi.clickable{cursor:pointer;transition:.15s}.kpi.clickable:hover{box-shadow:0 3px 10px rgba(0,0,0,.13);transform:translateY(-1px)}
+.kpi .label{font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+.kpi .value{font-size:20px;font-weight:700;color:var(--text);margin:3px 0 2px}
+.kpi .sub{font-size:10px;color:var(--muted)}
+.kpi.warn{border-left-color:var(--orange)}.kpi.danger{border-left-color:var(--red)}
+.kpi.info{border-left-color:var(--accent)}.kpi.purple{border-left-color:var(--purple)}
+.card{background:var(--card);border-radius:10px;padding:14px;box-shadow:0 1px 4px rgba(0,0,0,.07);margin-bottom:14px}
+.card h3{font-size:13px;font-weight:700;color:var(--green-dark);margin-bottom:10px}
+.chart-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-bottom:14px}
+.chart-box{background:var(--card);border-radius:10px;padding:14px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.chart-box h4{font-size:12px;font-weight:700;color:var(--green-dark);margin-bottom:8px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{background:#f0f7f3;color:var(--green-dark);font-weight:700;padding:7px 9px;text-align:left;border-bottom:2px solid var(--green);white-space:nowrap}
+td{padding:6px 9px;border-bottom:1px solid var(--border)}
+tr:hover td{background:#f8fffe}
+.badge{display:inline-block;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:700}
+.badge.pending{background:#fff3e0;color:#e65100}.badge.received{background:#e8f5e9;color:#2e7d32}
+.badge.risk{background:#fce4ec;color:#b71c1c}.badge.ok{background:#e3f2fd;color:#0d47a1}
+.badge.med{background:#fff8e1;color:#f57f17}.badge.b0{background:#e8f5e9;color:#1b5e20}
+.badge.b31{background:#fff9c4;color:#f57f17}.badge.b61{background:#ffe0b2;color:#e65100}
+.badge.b91{background:#ffccbc;color:#bf360c}.badge.b120{background:#fce4ec;color:#b71c1c}
+input[type=text],input[type=date],select{border:1px solid var(--border);border-radius:6px;padding:5px 9px;font-size:12px;color:var(--text);background:#fff}
+input[type=text]:focus,input[type=date]:focus,select:focus{outline:none;border-color:var(--green)}
+.filter-row{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:11px;align-items:center}
+.filter-row label{font-size:11px;font-weight:600;color:var(--muted)}
+.btn{border:none;border-radius:6px;padding:6px 12px;font-size:11px;font-weight:600;cursor:pointer;transition:.15s}
+.btn-green{background:var(--green);color:#fff}.btn-green:hover{background:var(--green-dark)}
+.btn-blue{background:var(--accent);color:#fff}.btn-blue:hover{background:#0060aa}
+.btn-orange{background:var(--orange);color:#fff}
+.insight-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:9px;margin-bottom:14px}
+.insight{border-radius:8px;padding:11px 13px;font-size:12px}
+.insight.alert{background:#fff3cd;border-left:3px solid var(--yellow)}.insight.good{background:#d4edda;border-left:3px solid var(--green)}
+.insight.bad{background:#f8d7da;border-left:3px solid var(--red)}.insight.info2{background:#d1ecf1;border-left:3px solid var(--accent)}
+.insight strong{display:block;font-size:10px;font-weight:700;margin-bottom:3px;text-transform:uppercase}
+.pager{display:flex;gap:6px;align-items:center;font-size:11px;margin-top:8px}
+.pager button{padding:3px 9px;border:1px solid var(--border);background:#fff;border-radius:4px;cursor:pointer;font-size:11px}
+.pager button:hover{background:var(--green-light)}
+/* TPA Count popup */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:12px;padding:20px;width:92%;max-width:820px;max-height:88vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.18)}
+.modal-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;border-bottom:2px solid var(--green);padding-bottom:10px}
+.modal-hdr h2{font-size:15px;font-weight:700;color:var(--green-dark)}
+.modal-close{background:var(--red);color:#fff;border:none;border-radius:6px;padding:4px 12px;cursor:pointer;font-size:12px;font-weight:700}
+/* Bucket pill multi-select */
+.bucket-pills{display:flex;flex-wrap:wrap;gap:6px}
+.bucket-pill{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:2px solid transparent;transition:.15s;user-select:none}
+.bucket-pill.all{background:#e8f5e9;color:#1b5e20;border-color:#00b050}
+.bucket-pill.b0{background:#e8f5e9;color:#1b5e20;border-color:#81c784}
+.bucket-pill.b31{background:#fff9c4;color:#f57f17;border-color:#ffd54f}
+.bucket-pill.b61{background:#ffe0b2;color:#e65100;border-color:#ffb74d}
+.bucket-pill.b91{background:#ffccbc;color:#bf360c;border-color:#ff8a65}
+.bucket-pill.b120{background:#fce4ec;color:#b71c1c;border-color:#ef9a9a}
+.bucket-pill.active{border-width:2px;box-shadow:0 0 0 1px currentColor;font-weight:900}
+.bucket-pill:not(.active){opacity:.55}
+/* TPA wise patient table striped */
+#tpaPatientTable tr:nth-child(even) td{background:#f8fffe}
+.tpa-section-row td{background:#e8f5e9!important;font-weight:700;color:var(--green-dark);font-size:12px}
+</style>
+</head>
+<body>
+
+<!-- LOADING OVERLAY -->
+
+<!-- CORS GUIDE MODAL -->
+<div id="cors-guide" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:5000;align-items:center;justify-content:center;padding:16px">
+  <div style="background:#fff;border-radius:12px;width:100%;max-width:700px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.3)">
+    <div style="background:linear-gradient(135deg,#d93025,#b71c1c);color:#fff;padding:16px 20px;border-radius:12px 12px 0 0;display:flex;justify-content:space-between;align-items:center">
+      <div><div style="font-size:15px;font-weight:700">&#9888; Google Sheet Connection Failed</div>
+      <div style="font-size:11px;opacity:.85;margin-top:2px">Follow one of these solutions to fix it</div></div>
+      <button onclick="document.getElementById('cors-guide').style.display='none'" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:6px;padding:4px 12px;cursor:pointer;font-weight:700">&#10005;</button>
+    </div>
+    <div style="padding:20px;font-family:Arial,sans-serif;font-size:13px">
+
+      <!-- SOLUTION 1 -->
+      <div style="background:#e8f5e9;border:1px solid #00b050;border-radius:8px;padding:14px;margin-bottom:14px">
+        <div style="font-weight:700;font-size:13px;color:#1b5e20;margin-bottom:8px">&#9989; Solution 1 — Check Google Sheet is Published (Most Common Fix)</div>
+        <ol style="margin-left:18px;line-height:2">
+          <li>Open your Google Sheet</li>
+          <li>Click <strong>File → Share → Publish to web</strong></li>
+          <li>Select your sheet tab → choose <strong>CSV</strong></li>
+          <li>Click <strong>Publish</strong> and confirm</li>
+          <li>Copy the URL — paste it in the HTML file at <code style="background:#f0f0f0;padding:1px 5px;border-radius:3px">SHEET_CSV_URL</code></li>
+          <li>The URL must end with: <code style="background:#f0f0f0;padding:1px 5px;border-radius:3px">output=csv</code></li>
+        </ol>
+        <div style="background:#fff;border:1px solid #c8e6c9;border-radius:6px;padding:10px;margin-top:8px;font-size:11px;color:#2e7d32">
+          <strong>Correct URL format:</strong><br>
+          <code>https://docs.google.com/spreadsheets/d/<span style="color:#d93025">SHEET_ID</span>/pub?gid=0&amp;single=true&amp;output=csv</code>
+        </div>
+      </div>
+
+      <!-- SOLUTION 2 -->
+      <div style="background:#e3f2fd;border:1px solid #0077cc;border-radius:8px;padding:14px;margin-bottom:14px">
+        <div style="font-weight:700;font-size:13px;color:#01579b;margin-bottom:8px">&#128640; Solution 2 — Open from a Web Server (Best for Office Use)</div>
+        <p style="margin-bottom:8px;color:#333">Browsers block Google Sheet fetch from local files. Host the HTML on a simple web server:</p>
+        <div style="background:#f8f9ff;border-radius:6px;padding:10px;font-size:11px">
+          <strong>Option A — Python (if Python installed):</strong><br>
+          <code style="background:#1a2332;color:#00ff88;padding:6px 10px;border-radius:4px;display:block;margin:6px 0">python -m http.server 8080</code>
+          Then open: <code style="background:#f0f0f0;padding:2px 6px;border-radius:3px">http://localhost:8080/AVN_Arogya_Live_Dashboard.html</code><br><br>
+          <strong>Option B — VS Code Live Server extension:</strong><br>
+          Install "Live Server" → Right click HTML file → <strong>Open with Live Server</strong><br><br>
+          <strong>Option C — Upload to Google Drive → open with browser</strong>
+        </div>
+      </div>
+
+      <!-- SOLUTION 3 -->
+      <div style="background:#fff3e0;border:1px solid #e87722;border-radius:8px;padding:14px;margin-bottom:14px">
+        <div style="font-weight:700;font-size:13px;color:#e65100;margin-bottom:8px">&#128193; Solution 3 — Use Google Apps Script as a Proxy (No CORS issue)</div>
+        <p style="margin-bottom:8px;color:#333">Create a Web App from Google Sheets that serves your data without CORS:</p>
+        <ol style="margin-left:18px;line-height:2;font-size:12px">
+          <li>In Google Sheet: <strong>Extensions → Apps Script</strong></li>
+          <li>Paste this code:</li>
+        </ol>
+        <pre style="background:#1a2332;color:#00ff88;padding:10px;border-radius:6px;font-size:11px;overflow-x:auto;margin:8px 0">function doGet(){
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  const data  = sheet.getDataRange().getValues();
+  const headers = data[0];
+  const rows = data.slice(1).map(r=>{
+    const obj={};
+    headers.forEach((h,i)=>obj[h]=r[i]);
+    return obj;
+  });
+  return ContentService
+    .createTextOutput(JSON.stringify(rows))
+    .setMimeType(ContentService.MimeType.JSON);
+}</pre>
+        <ol start="3" style="margin-left:18px;line-height:2;font-size:12px">
+          <li>Click <strong>Deploy → New deployment → Web App</strong></li>
+          <li>Execute as: <strong>Me</strong> | Access: <strong>Anyone</strong></li>
+          <li>Copy the Web App URL</li>
+          <li>In the dashboard HTML, change <code>SHEET_CSV_URL</code> to this URL<br>and set <code>USE_APPS_SCRIPT = true</code></li>
+        </ol>
+      </div>
+
+      <!-- SOLUTION 4 -->
+      <div style="background:#f3e5f5;border:1px solid #7b2fbe;border-radius:8px;padding:14px">
+        <div style="font-weight:700;font-size:13px;color:#4a148c;margin-bottom:8px">&#9889; Solution 4 — Quickest Workaround Right Now</div>
+        <p style="color:#333;margin-bottom:6px">If you just need it working immediately without any setup:</p>
+        <ol style="margin-left:18px;line-height:2;font-size:12px">
+          <li>Open Google Sheet → <strong>File → Download → CSV</strong></li>
+          <li>Open the original <strong>AVN_Arogya_Dashboard_v2.html</strong> (the one with embedded data)</li>
+          <li>That file works offline — no internet needed</li>
+          <li>Every week, ask Claude to rebuild it with the new CSV</li>
+        </ol>
+      </div>
+
+      <div style="text-align:center;margin-top:16px">
+        <button onclick="document.getElementById('cors-guide').style.display='none';loadFromSheet(false)" style="background:#00b050;color:#fff;border:none;border-radius:6px;padding:9px 24px;cursor:pointer;font-size:13px;font-weight:700">&#8635; Try Again</button>
+        &nbsp;
+        <button onclick="document.getElementById('cors-guide').style.display='none'" style="background:#eee;color:#333;border:none;border-radius:6px;padding:9px 24px;cursor:pointer;font-size:13px;font-weight:600">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="loading-overlay" style="display:flex;position:fixed;inset:0;background:rgba(0,50,20,.82);z-index:3000;align-items:center;justify-content:center;flex-direction:column;gap:16px">
+  <div style="width:54px;height:54px;border:5px solid rgba(255,255,255,.25);border-top-color:#00ff88;border-radius:50%;animation:spin .8s linear infinite"></div>
+  <div id="loading-msg" style="color:#fff;font-size:15px;font-weight:600;font-family:Arial,sans-serif">Loading data from Google Sheets...</div>
+  <div style="color:rgba(255,255,255,.6);font-size:12px;font-family:Arial,sans-serif">AVN Arogya Healthcare — Insurance Dashboard</div>
+</div>
+<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+<!-- ERROR BAR -->
+<div id="fetch-error" style="display:none;position:fixed;top:0;left:0;right:0;background:#d93025;color:#fff;padding:10px 20px;font-size:13px;font-weight:600;z-index:4000;text-align:center"></div>
+
+<div class="hdr">
+  <div class="hdr-left">
+    <h1>&#9632; AVN Arogya Healthcare Pvt Ltd</h1>
+    <p>Insurance Outstanding — Above 30 Days Pending Report &nbsp;|&nbsp; Accounts Dept</p>
+  </div>
+  <div class="hdr-right">
+    <div style="display:flex;align-items:center;gap:10px"><strong>03rd May 2026</strong><span id="last-refreshed" style="font-size:10px;opacity:.75"></span><button onclick="document.getElementById('prompt-modal').style.display='flex'" style="background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.5);border-radius:6px;padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">&#128196; Weekly Prompt</button></div>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="active" onclick="showPage('overview',this)">&#128200; Overview</button>
+  <button onclick="showPage('tpa',this)">&#127970; TPA Wise</button>
+  <button onclick="showPage('tpapatient',this)">&#128196; TPA Patient Report</button>
+  <button onclick="showPage('patient',this)">&#128101; Patient Search</button>
+  <button onclick="showPage('collection',this)">&#128181; Collection Report</button>
+  <button onclick="showPage('aging',this)">&#9203; Aging Buckets</button>
+  <button onclick="showPage('trend',this)">&#128202; Trends</button>
+  <button onclick="showPage('ranking',this)">&#127942; TPA Ranking</button>
+  <button onclick="showPage('insights',this)">&#128161; Insights</button>
+  <button onclick="manualRefresh()" style="margin-left:auto;background:#00b050;color:#fff;border:1px solid #007a36;padding:6px 14px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">&#8635; Refresh Data</button>
+</div>
+
+<div class="content">
+
+<!-- ===== OVERVIEW ===== -->
+<div class="page active" id="pg-overview">
+  <div class="filter-row">
+    <label>Financial Year:</label>
+    <select id="fy-filter" onchange="applyFYFilter()"><option value="all" selected>All Years</option></select>
+    <label>Quarter:</label>
+    <select id="q-filter" onchange="applyFYFilter()">
+      <option value="all">All Quarters</option>
+      <option value="Q1">Q1 (Apr–Jun)</option>
+      <option value="Q2">Q2 (Jul–Sep)</option>
+      <option value="Q3">Q3 (Oct–Dec)</option>
+      <option value="Q4">Q4 (Jan–Mar)</option>
+    </select>
+    <label>TPA:</label>
+    <select id="tpa-filter-ov" onchange="applyFYFilter()"><option value="all">All TPAs</option></select>
+    <button class="btn btn-green" onclick="resetFilters()">Reset</button>
+    <button class="btn btn-blue" onclick="exportExcel()">&#8595; Excel</button>
+    <button class="btn btn-orange" onclick="window.print()">&#128438; PDF</button>
+  </div>
+  <div class="kpi-grid" id="kpi-row"></div>
+  <!-- TPA Count Breakup inline panel -->
+  <div class="card" id="tpa-breakup-panel" style="display:none">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <h3 style="margin:0">&#127970; TPA Count Breakup — Pending Cases by Bucket</h3>
+      <button class="btn btn-gray" onclick="document.getElementById('tpa-breakup-panel').style.display='none'" style="background:#eee;border:none;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:11px">&#10005; Close</button>
+    </div>
+    <div id="tpa-breakup-content"></div>
+  </div>
+  <div class="chart-row">
+    <div class="chart-box" style="grid-column:span 2">
+      <h4>&#128202; TPA Outstanding (Above 30 Days Pending)</h4>
+      <div style="position:relative;height:260px"><canvas id="tpaBarChart" role="img" aria-label="TPA outstanding bar chart"></canvas></div>
+    </div>
+    <div class="chart-box">
+      <h4>&#127774; Aging Bucket Distribution</h4>
+      <div style="position:relative;height:260px"><canvas id="agingPieChart" role="img" aria-label="Aging bucket pie chart"></canvas></div>
+    </div>
+  </div>
+  <div class="chart-row">
+    <div class="chart-box" style="grid-column:span 2">
+      <h4>&#127919; Collection Efficiency — Quarter Wise</h4>
+      <div style="position:relative;height:220px"><canvas id="qtrEffChart" role="img" aria-label="Quarter wise efficiency"></canvas></div>
+    </div>
+    <div class="chart-box">
+      <h4>&#127919; Overall Efficiency Gauge</h4>
+      <div style="position:relative;height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center">
+        <canvas id="gaugeChart" role="img" aria-label="Efficiency gauge" style="max-height:160px"></canvas>
+        <div id="gauge-pct" style="font-size:26px;font-weight:700;color:var(--green-dark);margin-top:-24px"></div>
+        <div style="font-size:10px;color:var(--muted)">Collection Efficiency</div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <h3>&#127942; Top 10 High Outstanding TPA (Above 30 Days Pending)</h3>
+    <table id="top10table">
+      <thead><tr><th>#</th><th>TPA Name</th><th>Outstanding (&#8377;)</th><th>Cases</th><th>Avg Days</th><th>Efficiency %</th><th>Status</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ===== TPA WISE ===== -->
+<div class="page" id="pg-tpa">
+  <div class="filter-row">
+    <label>TPA:</label>
+    <select id="tpa-filter-tpa" onchange="renderTPAPage()"><option value="all">All TPAs</option></select>
+    <label>Show only above 30 days:</label>
+    <input type="checkbox" id="above30check" checked onchange="renderTPAPage()">
+  </div>
+  <div class="card">
+    <h3>&#127970; TPA Wise Outstanding — Above 30 Days Pending</h3>
+    <table id="tpaTable">
+      <thead><tr><th>TPA Name</th><th>Outstanding (&#8377;)</th><th>No. of Cases</th><th>Avg Recovery Days</th><th>Collection Efficiency %</th><th>Bucket Status</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <div class="chart-row" style="margin-top:14px">
+    <div class="chart-box" style="grid-column:span 3">
+      <h4>Recovery Days Comparison by TPA</h4>
+      <div style="position:relative;height:300px"><canvas id="recoveryChart" role="img" aria-label="Recovery days comparison"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TPA PATIENT REPORT (NEW) ===== -->
+<div class="page" id="pg-tpapatient">
+  <div class="filter-row">
+    <label>TPA:</label>
+    <select id="tpp-tpa" onchange="renderTPAPatientPage()"><option value="all">All TPAs</option></select>
+    <label>Status:</label>
+    <select id="tpp-status" onchange="renderTPAPatientPage()">
+      <option value="all">All</option>
+      <option value="Pending" selected>Pending</option>
+      <option value="Received">Received</option>
+    </select>
+    <label>Bucket:</label>
+    <div class="bucket-pills" id="tpp-bucket-pills">
+      <span class="bucket-pill b0" data-val="0-30" onclick="toggleTPPBucket(this)">0–30 Days</span>
+      <span class="bucket-pill b31 active" data-val="31-60" onclick="toggleTPPBucket(this)">31–60 Days</span>
+      <span class="bucket-pill b61 active" data-val="61-90" onclick="toggleTPPBucket(this)">61–90 Days</span>
+      <span class="bucket-pill b91 active" data-val="91-120" onclick="toggleTPPBucket(this)">91–120 Days</span>
+      <span class="bucket-pill b120 active" data-val="120+" onclick="toggleTPPBucket(this)">Above 120</span>
+    </div>
+    <input type="text" id="tpp-search" placeholder="&#128269; Search patient/UHID..." style="width:200px" oninput="renderTPAPatientPage()">
+    <span id="tpp-count" style="font-size:11px;color:var(--muted)"></span>
+    <button class="btn btn-blue" onclick="exportTPAPatientExcel()">&#8595; Excel</button>
+  </div>
+
+  <!-- Summary KPIs -->
+  <div class="kpi-grid" id="tpp-kpi" style="grid-template-columns:repeat(5,1fr)"></div>
+
+  <!-- TPA group cards -->
+  <div id="tpp-tpa-summary" style="margin-bottom:14px"></div>
+
+  <!-- Patient detail table -->
+  <div class="card" style="overflow-x:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <h3 style="margin:0">&#128196; Patient Wise — TPA Outstanding Report</h3>
+      <label style="font-size:11px;font-weight:600;color:var(--muted)">
+        <input type="checkbox" id="tpp-groupby" checked onchange="renderTPAPatientPage()"> Group by TPA
+      </label>
+    </div>
+    <table id="tpaPatientTable">
+      <thead><tr>
+        <th>#</th><th>TPA Name</th><th>Patient Name</th><th>UHID</th>
+        <th>Bill Date</th><th>Bill Value (&#8377;)</th><th>Net Approval (&#8377;)</th>
+        <th>TDS (&#8377;)</th><th>Received (&#8377;)</th><th>Outstanding (&#8377;)</th>
+        <th>Pending Days</th><th>Bucket</th><th>Status</th>
+      </tr></thead>
+      <tbody></tbody>
+    </table>
+    <div class="pager" id="tpp-pager"></div>
+  </div>
+</div>
+
+<!-- ===== PATIENT SEARCH ===== -->
+<div class="page" id="pg-patient">
+  <div class="filter-row">
+    <input type="text" id="patient-search" placeholder="&#128269; Search patient / UHID..." style="width:240px" oninput="renderPatientTable()">
+    <select id="patient-tpa" onchange="renderPatientTable()"><option value="all">All TPAs</option></select>
+    <select id="patient-status" onchange="renderPatientTable()">
+      <option value="all">All Status</option>
+      <option value="Pending">Pending</option>
+      <option value="Received">Received</option>
+    </select>
+    <div class="bucket-pills" id="pt-bucket-pills">
+      <span class="bucket-pill all active" data-val="all" onclick="togglePTBucket(this)">All</span>
+      <span class="bucket-pill b0 active" data-val="0-30" onclick="togglePTBucket(this)">0–30</span>
+      <span class="bucket-pill b31 active" data-val="31-60" onclick="togglePTBucket(this)">31–60</span>
+      <span class="bucket-pill b61 active" data-val="61-90" onclick="togglePTBucket(this)">61–90</span>
+      <span class="bucket-pill b91 active" data-val="91-120" onclick="togglePTBucket(this)">91–120</span>
+      <span class="bucket-pill b120 active" data-val="120+" onclick="togglePTBucket(this)">120+</span>
+    </div>
+    <span id="patient-count" style="font-size:11px;color:var(--muted)"></span>
+  </div>
+  <div class="card" style="overflow-x:auto">
+    <h3>&#128101; Patient Wise Report</h3>
+    <table id="patientTable">
+      <thead><tr><th>#</th><th>Patient Name</th><th>UHID</th><th>TPA</th><th>Bill Amt</th><th>Net Approval</th><th>TDS</th><th>Received</th><th>Outstanding</th><th>Pending Days</th><th>Bucket</th><th>Status</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <div class="pager" id="patient-pager"></div>
+  </div>
+</div>
+
+<!-- ===== COLLECTION ===== -->
+<div class="page" id="pg-collection">
+  <div class="filter-row">
+    <label>From:</label><input type="date" id="col-from">
+    <label>To:</label><input type="date" id="col-to">
+    <button class="btn btn-green" onclick="renderCollectionReport()">Apply</button>
+    <input type="text" id="col-patient" placeholder="&#128269; Patient..." style="width:160px" oninput="renderCollectionReport()">
+    <input type="text" id="col-tpa-s" placeholder="&#128269; TPA..." style="width:160px" oninput="renderCollectionReport()">
+    <select id="col-sort" onchange="renderCollectionReport()">
+      <option value="asc">Date Asc</option><option value="desc">Date Desc</option>
+    </select>
+    <button class="btn btn-blue" onclick="exportCollectionExcel()">&#8595; Export</button>
+  </div>
+  <div class="kpi-grid" id="col-kpi" style="grid-template-columns:repeat(4,1fr)"></div>
+  <div class="chart-row">
+    <div class="chart-box" style="grid-column:span 3">
+      <h4>&#128200; Date Wise Collection Trend</h4>
+      <div style="position:relative;height:200px"><canvas id="colTrendChart" role="img" aria-label="Collection trend"></canvas></div>
+    </div>
+  </div>
+  <div class="card" style="overflow-x:auto">
+    <h3>&#128181; Collection Data</h3>
+    <table id="collectionTable">
+      <thead><tr><th>Received Date</th><th>Patient Name</th><th>TPA Name</th><th>Amount (&#8377;)</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <div class="pager" id="col-pager"></div>
+  </div>
+</div>
+
+<!-- ===== AGING ===== -->
+<div class="page" id="pg-aging">
+  <div class="filter-row">
+    <label>TPA:</label>
+    <select id="aging-tpa" onchange="renderAgingPage()"><option value="all">All TPAs</option></select>
+    <label>FY:</label>
+    <select id="aging-fy" onchange="renderAgingPage()"><option value="all">All Years</option></select>
+  </div>
+  <div class="kpi-grid" id="aging-kpi"></div>
+  <div class="chart-row">
+    <div class="chart-box"><h4>Aging Bucket – Outstanding</h4><div style="position:relative;height:250px"><canvas id="agingBarChart" role="img" aria-label="Aging outstanding"></canvas></div></div>
+    <div class="chart-box"><h4>Aging Bucket – Case Count</h4><div style="position:relative;height:250px"><canvas id="agingCaseChart" role="img" aria-label="Aging cases"></canvas></div></div>
+  </div>
+  <div class="card">
+    <h3>Bucket Detail (Above 30 Days Pending)</h3>
+    <table id="agingTable">
+      <thead><tr><th>Bucket</th><th>Cases</th><th>Outstanding (&#8377;)</th><th>% of Total</th><th>Avg Days</th><th>Risk Level</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ===== TRENDS ===== -->
+<div class="page" id="pg-trend">
+  <div class="filter-row">
+    <label>Financial Year:</label>
+    <select id="trend-fy" onchange="renderTrendPage()"><option value="all">All Years</option></select>
+  </div>
+  <div class="chart-row">
+    <div class="chart-box" style="grid-column:span 3">
+      <h4>&#128200; Monthly Recovery Trend (Apr – Mar)</h4>
+      <div style="position:relative;height:260px"><canvas id="trendChart" role="img" aria-label="Monthly recovery trend"></canvas></div>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Month-wise Summary</h3>
+    <table id="trendTable">
+      <thead><tr><th>Month</th><th>Cases Received</th><th>Collection (&#8377;)</th><th>Cumulative (&#8377;)</th><th>MoM Change</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ===== RANKING ===== -->
+<div class="page" id="pg-ranking">
+  <div class="chart-row">
+    <div class="chart-box"><h4>&#9989; Fastest Paying TPAs</h4><div style="position:relative;height:280px"><canvas id="fastChart" role="img" aria-label="Fastest TPA"></canvas></div></div>
+    <div class="chart-box"><h4>&#9888;&#65039; Slowest Paying TPAs</h4><div style="position:relative;height:280px"><canvas id="slowChart" role="img" aria-label="Slowest TPA"></canvas></div></div>
+  </div>
+  <div class="card">
+    <h3>&#127942; TPA Performance Ranking</h3>
+    <table id="rankTable">
+      <thead><tr><th>Rank</th><th>TPA Name</th><th>Avg Recovery Days</th><th>Cases Cleared</th><th>Cases Pending</th><th>Efficiency %</th><th>Performance</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <div class="card" style="margin-top:14px">
+    <h3>Case Count Dashboard</h3>
+    <div class="kpi-grid" id="case-kpi"></div>
+  </div>
+</div>
+
+<!-- ===== INSIGHTS ===== -->
+<div class="page" id="pg-insights">
+  <div class="card">
+    <h3>&#128161; Smart Management Insights &amp; Alerts</h3>
+    <div class="insight-row" id="insights-row"></div>
+  </div>
+  <div class="chart-row">
+    <div class="chart-box" style="grid-column:span 2"><h4>Deduction Analysis</h4><div style="position:relative;height:260px"><canvas id="deductChart" role="img" aria-label="Deduction analysis"></canvas></div></div>
+    <div class="chart-box"><h4>Pending Risk Distribution</h4><div style="position:relative;height:260px"><canvas id="riskChart" role="img" aria-label="Risk pie"></canvas></div></div>
+  </div>
+  <div class="card">
+    <h3>&#128293; High-Risk Pending Cases (Above 120 Days)</h3>
+    <table id="riskTable">
+      <thead><tr><th>Patient</th><th>UHID</th><th>TPA</th><th>Outstanding (&#8377;)</th><th>Pending Days</th><th>Action</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+</div><!-- .content -->
+
+<script>
+
+/* ══════════════════════════════════════════════
+   LIVE GOOGLE SHEETS DATA LOADER
+   Replace SHEET_CSV_URL with your published URL
+   ══════════════════════════════════════════════ */
+
+const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ30_oWv1o8THapmgPnwLJjKecFe_NPdQzVHeM50OMHFf7Z2g5JPJfOdTn_b9o--kTFwy7FWSN4xB1v/pub?gid=0&single=true&output=csv';
+
+const AUTO_REFRESH_MINUTES = 5;
+const TODAY = new Date(2026,4,3); // May 3 2026 — update this date each week if needed
+
+let ALL_DATA = [];
+let _refreshTimer = null;
+
+// ── CSV parser ──────────────────────────────────
+function parseCSV(text){
+  const lines = text.trim().split(/\r?\n/);
+  if(!lines.length) return [];
+  const headers = splitCSVLine(lines[0]);
+  const rows = [];
+  for(let i=1;i<lines.length;i++){
+    if(!lines[i].trim()) continue;
+    const vals = splitCSVLine(lines[i]);
+    const obj = {};
+    headers.forEach((h,j) => obj[h.trim()] = (vals[j]||'').trim());
+    rows.push(obj);
+  }
+  return rows;
+}
+
+function splitCSVLine(line){
+  const result=[];let cur='';let inQ=false;
+  for(let i=0;i<line.length;i++){
+    const ch=line[i];
+    if(ch==='"'){
+      if(inQ && line[i+1]==='"'){cur+='"';i++;}
+      else inQ=!inQ;
+    } else if(ch===','&&!inQ){result.push(cur);cur='';}
+    else cur+=ch;
+  }
+  result.push(cur);
+  return result;
+}
+
+// ── parse date dd-mm-yyyy or dd/mm/yyyy ──────────
+function parseDate(s){
+  if(!s) return null;
+  // Already a Date object (from Apps Script)
+  if(s instanceof Date) return isNaN(s.getTime()) ? null : s;
+  const str = String(s).trim();
+  if(!str || str === 'Invalid Date') return null;
+  // dd-mm-yyyy or dd/mm/yyyy
+  const p = str.split(/[-\/]/);
+  if(p.length === 3){
+    let d=parseInt(p[0]),m=parseInt(p[1]),y=parseInt(p[2]);
+    // detect yyyy-mm-dd format
+    if(p[0].length === 4){ y=parseInt(p[0]); m=parseInt(p[1]); d=parseInt(p[2]); }
+    if(y < 100) y += 2000;
+    if(!isNaN(d)&&!isNaN(m)&&!isNaN(y)) return new Date(y, m-1, d);
+  }
+  // Try native parse as fallback
+  const dt = new Date(str);
+  return isNaN(dt.getTime()) ? null : dt;
+}
+
+function daysDiff(d1, d2){ return d1&&d2 ? Math.round((d2-d1)/(1000*60*60*24)) : 0; }
+
+// ── build rows from raw CSV objects ─────────────
+function buildRows(raw){
+  return raw.map((r,i)=>{
+    const billDate    = parseDate(r['Bill Date']);
+    const recvDate    = parseDate(r['Received Date']);
+    const pendingDays = billDate ? Math.max(0, daysDiff(billDate, TODAY)) : 0;
+    const netApproval = parseFloat(String(r['Net Approval']).replace(/[^0-9.-]/g,''))||0;
+    const tds         = parseFloat(String(r['TDS']).replace(/[^0-9.-]/g,''))||0;
+    const received    = parseFloat(String(r['Received']).replace(/[^0-9.-]/g,''))||0;
+    const billValue   = parseFloat(String(r['Bill Value']).replace(/[^0-9.-]/g,''))||0;
+    const recoverDays = parseFloat(String(r['Recover Days']).replace(/[^0-9.-]/g,''))||0;
+    const status      = (r['Status']||'').trim();
+    const tpa         = (r['TPA Name']||'Unknown').trim();
+    const month       = (r['Month']||'').trim();
+    const quarter     = (r['Month.1']||r['Quarter']||'').trim();
+
+    // FY from bill date
+    function toFY(dt){
+      if(!dt) return '';
+      const y=dt.getFullYear(), m=dt.getMonth()+1;
+      return m>=4 ? y+'-'+String(y+1).slice(-2) : (y-1)+'-'+String(y).slice(-2);
+    }
+
+    return {
+      sl: parseInt(r['Sl.No.'])||i+1,
+      tpa,
+      ins: (r['Insurance Company Name']||'').trim(),
+      patient: (r['Patient Name']||'').trim(),
+      uhid: (r['UHID']||'').trim(),
+      billDate: billDate ? [
+        String(billDate.getDate()).padStart(2,'0'),
+        String(billDate.getMonth()+1).padStart(2,'0'),
+        billDate.getFullYear()
+      ].join('-') : '',
+      billValue, netApproval, tds, received,
+      outstanding: status==='Pending' ? netApproval : 0,
+      status,
+      receivedDate: recvDate ? [
+        String(recvDate.getDate()).padStart(2,'0'),
+        String(recvDate.getMonth()+1).padStart(2,'0'),
+        recvDate.getFullYear()
+      ].join('-') : '',
+      pendingDays,
+      recoverDays,
+      month,
+      quarter,
+      amount: parseFloat(r['Amount'])||0,
+    };
+  });
+}
+
+// ── show/hide loading overlay ────────────────────
+function showLoading(msg){
+  document.getElementById('loading-overlay').style.display='flex';
+  document.getElementById('loading-msg').textContent = msg||'Loading data...';
+}
+function hideLoading(){ document.getElementById('loading-overlay').style.display='none'; }
+
+function showError(msg){
+  const el = document.getElementById('fetch-error');
+  el.textContent = '⚠ ' + msg;
+  el.style.display = 'block';
+  setTimeout(()=>el.style.display='none', 8000);
+}
+
+// ── main fetch + render ──────────────────────────
+// Set to true if using Google Apps Script Web App URL (Solution 3)
+const USE_APPS_SCRIPT = false;
+
+async function loadFromSheet(isRefresh){
+  if(SHEET_CSV_URL === 'YOUR_GOOGLE_SHEET_CSV_URL_HERE'){
+    hideLoading();
+    showError('Please set your Google Sheet CSV URL in the SHEET_CSV_URL variable.');
+    return;
+  }
+  showLoading(isRefresh ? 'Refreshing data from Google Sheets...' : 'Loading data from Google Sheets...');
+  // URLs to try: direct first (works on Netlify/GitHub), then CORS proxies
+  const baseURL = SHEET_CSV_URL + (SHEET_CSV_URL.includes('?') ? '&' : '?') + 't=' + Date.now();
+
+  const URLS_TO_TRY = [
+    { label: 'Direct',          url: baseURL },
+    { label: 'corsproxy.io',    url: `https://corsproxy.io/?${encodeURIComponent(baseURL)}` },
+    { label: 'allorigins',      url: `https://api.allorigins.win/raw?url=${encodeURIComponent(baseURL)}` },
+  ];
+
+  let loaded = false;
+
+  for(let i = 0; i < URLS_TO_TRY.length; i++){
+    const attempt = URLS_TO_TRY[i];
+    try {
+      showLoading((isRefresh ? 'Refreshing' : 'Loading') + ' data via ' + attempt.label + '...');
+      const resp = await fetch(attempt.url, { signal: AbortSignal.timeout(15000) });
+      if(!resp.ok) throw new Error('HTTP ' + resp.status);
+      const text = await resp.text();
+      if(!text || text.trim().length < 10) throw new Error('Empty response');
+
+      // Auto-detect format: JSON (Apps Script) or CSV (Publish URL)
+      let raw;
+      const trimmed = text.trim();
+      if(trimmed.startsWith('[') || trimmed.startsWith('{')){
+        raw = JSON.parse(trimmed);  // Apps Script JSON
+      } else {
+        raw = parseCSV(trimmed);    // Google Sheets CSV
+      }
+
+      if(!raw || raw.length === 0) throw new Error('No data rows found');
+
+      ALL_DATA = buildRows(raw);
+      console.log('✓ Loaded ' + ALL_DATA.length + ' rows via ' + attempt.label);
+      updateLastRefreshed();
+      initDashboard();
+      hideLoading();
+      loaded = true;
+      break;
+
+    } catch(e){
+      console.warn('✗ ' + attempt.label + ' failed:', e.message);
+      if(i === URLS_TO_TRY.length - 1){
+        hideLoading();
+        showError('Could not load data. ' + e.message + ' — Click for fix guide.');
+        showCORSGuide();
+      }
+    }
+  }
+}
+
+function updateLastRefreshed(){
+  const el = document.getElementById('last-refreshed');
+  if(el) el.textContent = 'Last updated: ' + new Date().toLocaleString('en-IN');
+}
+
+function startAutoRefresh(){
+  if(_refreshTimer) clearInterval(_refreshTimer);
+  _refreshTimer = setInterval(()=>loadFromSheet(true), AUTO_REFRESH_MINUTES * 60 * 1000);
+}
+
+function manualRefresh(){
+  loadFromSheet(true);
+}
+
+const EXCL=['Reject','G Money','GMoney','Unknown'];
+function getData(){ return ALL_DATA.filter(r=>!EXCL.includes(r.tpa)); }
+
+const fmt=v=>'&#8377;'+Math.round(v).toLocaleString('en-IN');
+const fmtN=v=>Math.round(v).toLocaleString('en-IN');
+const pct=v=>(Math.round(v*10)/10).toFixed(1)+'%';
+const MONTHS=['Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar'];
+const MNAMES=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const FY_COLORS=['#0077cc','#00b050','#e87722','#7b2fbe','#d93025'];
+const BKT_COLORS={'0-30':'#00b050','31-60':'#ffc000','61-90':'#ff6600','91-120':'#c00000','120+':'#8b0000'};
+const BKT_CLASS={'0-30':'b0','31-60':'b31','61-90':'b61','91-120':'b91','120+':'b120'};
+
+function bucket(d){
+  if(d<=30)return '0-30';if(d<=60)return '31-60';
+  if(d<=90)return '61-90';if(d<=120)return '91-120';return '120+';
+}
+function getBillFY(d){
+  if(!d)return '';const p=d.split('-');if(p.length<3)return '';
+  const yr=parseInt(p[2]),mn=parseInt(p[1]);
+  return mn>=4?yr+'-'+String(yr+1).slice(-2):(yr-1)+'-'+String(yr).slice(-2);
+}
+function getRecvFY(d){
+  if(!d)return '';const p=d.split('-');if(p.length<3)return '';
+  const yr=parseInt(p[2]),mn=parseInt(p[1]);
+  return mn>=4?yr+'-'+String(yr+1).slice(-2):(yr-1)+'-'+String(yr).slice(-2);
+}
+
+// ===== AUTO DETECT FYs =====
+function detectFYs(){
+  const s=new Set();
+  getData().forEach(r=>{
+    const f1=getBillFY(r.billDate),f2=getRecvFY(r.receivedDate);
+    if(f1)s.add(f1);if(f2)s.add(f2);
+  });
+  return [...s].sort();
+}
+const ALL_FYS=detectFYs();
+const LATEST_FY=ALL_FYS[ALL_FYS.length-1];
+
+// ===== POPULATE FILTERS =====
+function populateAll(rebuild){
+  if(rebuild){
+    ['tpa-filter-ov','tpa-filter-tpa','patient-tpa','aging-tpa','tpp-tpa','fy-filter','aging-fy','trend-fy'].forEach(id=>{
+      const el=document.getElementById(id); if(!el) return;
+      const cur=el.value;
+      Array.from(el.options).filter(o=>o.value!='all').forEach(o=>o.remove());
+      el.value=cur||'all';
+    });
+  }
+  const tpas=[...new Set(getData().map(r=>r.tpa).filter(t=>t&&t!='nan'&&t!='Unknown'))].sort();
+  ['tpa-filter-ov','tpa-filter-tpa','patient-tpa','aging-tpa','tpp-tpa'].forEach(id=>{
+    const el=document.getElementById(id);if(!el)return;
+    tpas.forEach(t=>{const o=document.createElement('option');o.value=t;o.textContent=t.length>38?t.slice(0,36)+'...':t;el.appendChild(o);});
+  });
+  ['fy-filter','aging-fy','trend-fy'].forEach(id=>{
+    const el=document.getElementById(id);if(!el)return;
+    ALL_FYS.forEach(fy=>{
+      const o=document.createElement('option');o.value=fy;o.textContent=fy;
+
+      el.appendChild(o);
+    });
+  });
+}
+
+// ===== BUCKET PILL MULTI-SELECT =====
+function getActiveBuckets(pillsId){
+  const pills=document.querySelectorAll('#'+pillsId+' .bucket-pill.active');
+  const vals=[...pills].map(p=>p.dataset.val).filter(v=>v!='all');
+  return vals.length===0||[...document.querySelectorAll('#'+pillsId+' .bucket-pill.active')].some(p=>p.dataset.val==='all')?null:vals;
+}
+
+function togglePills(el, pillsId, callback){
+  const val=el.dataset.val;
+  if(val==='all'){
+    document.querySelectorAll('#'+pillsId+' .bucket-pill').forEach(p=>p.classList.add('active'));
+  } else {
+    const allPill=document.querySelector('#'+pillsId+' .bucket-pill[data-val="all"]');
+    el.classList.toggle('active');
+    const anyActive=[...document.querySelectorAll('#'+pillsId+' .bucket-pill:not([data-val="all"])')].some(p=>p.classList.contains('active'));
+    if(!anyActive){document.querySelectorAll('#'+pillsId+' .bucket-pill').forEach(p=>p.classList.add('active'));}
+    else{allPill.classList.remove('active');}
+  }
+  callback();
+}
+function toggleTPPBucket(el){
+  el.classList.toggle('active');
+  const anyActive=[...document.querySelectorAll('#tpp-bucket-pills .bucket-pill')].some(p=>p.classList.contains('active'));
+  if(!anyActive){
+    document.querySelectorAll('#tpp-bucket-pills .bucket-pill:not([data-val="0-30"])').forEach(p=>p.classList.add('active'));
+  }
+  renderTPAPatientPage();
+}
+function togglePTBucket(el){togglePills(el,'pt-bucket-pills',()=>{patientPage=1;drawPatientTable();});}
+
+function tppActiveBuckets(){
+  const all=[...document.querySelectorAll('#tpp-bucket-pills .bucket-pill')];
+  const actives=all.filter(p=>p.classList.contains('active')).map(p=>p.dataset.val);
+  if(actives.length===all.length) return null;
+  return actives.length?actives:null;
+}
+function ptActiveBuckets(){
+  const actives=[...document.querySelectorAll('#pt-bucket-pills .bucket-pill.active')].map(p=>p.dataset.val).filter(v=>v!='all');
+  return actives.length===5?null:actives;
+}
+
+// ===== CHARTS =====
+const charts={};
+function mkChart(id,cfg){if(charts[id])charts[id].destroy();const el=document.getElementById(id);if(!el)return;charts[id]=new Chart(el,cfg);return charts[id];}
+
+// ===== FILTER STATE =====
+let filteredData=[];
+
+function applyFYFilter(){
+  const fy=document.getElementById('fy-filter').value;
+  const q=document.getElementById('q-filter').value;
+  const tpa=document.getElementById('tpa-filter-ov').value;
+  filteredData=getData().filter(r=>{
+    if(r.status!='Pending')return false;
+    if(r.pendingDays<=30)return false;
+    if(fy!='all'&&getBillFY(r.billDate)!=fy)return false;
+    if(q!='all'&&!r.quarter.startsWith(q))return false;
+    if(tpa!='all'&&r.tpa!=tpa)return false;
+    return true;
+  });
+  renderOverview();
+}
+
+function resetFilters(){
+  document.getElementById('fy-filter').value='all';
+  document.getElementById('q-filter').value='all';
+  document.getElementById('tpa-filter-ov').value='all';
+  filteredData=getData().filter(r=>r.status=='Pending'&&r.pendingDays>30);
+  renderOverview();
+}
+
+// ===== OVERVIEW =====
+function renderOverview(){
+  const d=filteredData;
+  const totalOut=d.reduce((a,r)=>a+r.netApproval,0);
+  const allNA=getData().reduce((a,r)=>a+r.netApproval,0);
+  const allTDS=getData().reduce((a,r)=>a+r.tds,0);
+  const allRecv=getData().reduce((a,r)=>a+r.received,0);
+  const eff=allNA-allTDS>0?(allRecv/(allNA-allTDS)*100):0;
+  const recDays=getData().filter(r=>r.status=='Received'&&r.recoverDays>0).map(r=>r.recoverDays);
+  const avgRec=recDays.length?recDays.reduce((a,b)=>a+b,0)/recDays.length:0;
+  const b120=d.filter(r=>r.pendingDays>120);
+  const out120=b120.reduce((a,r)=>a+r.netApproval,0);
+
+  // TPA count: only above 30 days pending, distinct TPAs
+  const above30TPAs=new Set(d.filter(r=>r.pendingDays>30).map(r=>r.tpa));
+  const tpaCount=above30TPAs.size;
+
+  document.getElementById('kpi-row').innerHTML=`
+    <div class="kpi danger"><div class="label">Total Outstanding</div><div class="value" style="color:#d93025;font-size:17px">${fmt(totalOut)}</div><div class="sub">${d.length} pending cases</div></div>
+    <div class="kpi warn"><div class="label">Above 120 Days</div><div class="value" style="color:#e87722;font-size:16px">${fmt(out120)}</div><div class="sub" style="font-weight:700;color:#d93025">${b120.length} critical cases</div></div>
+    <div class="kpi info"><div class="label">Avg Recovery Days</div><div class="value" style="color:#0077cc">${Math.round(avgRec)}</div><div class="sub">Days to collect</div></div>
+    <div class="kpi purple clickable" onclick="showTPABreakup()" title="Click to see TPA breakup"><div class="label">TPA Count (30+ Days) &#128269;</div><div class="value" style="color:#7b2fbe">${tpaCount}</div><div class="sub" style="color:#7b2fbe;font-weight:600">Click for breakup &#9660;</div></div>
+    <div class="kpi danger"><div class="label">31–60 Days</div><div class="value" style="color:#e87722">${fmt(d.filter(r=>bucket(r.pendingDays)=='31-60').reduce((a,r)=>a+r.netApproval,0))}</div><div class="sub">${d.filter(r=>bucket(r.pendingDays)=='31-60').length} cases</div></div>
+    <div class="kpi danger"><div class="label">61–90 Days</div><div class="value" style="color:#ff4500">${fmt(d.filter(r=>bucket(r.pendingDays)=='61-90').reduce((a,r)=>a+r.netApproval,0))}</div><div class="sub">${d.filter(r=>bucket(r.pendingDays)=='61-90').length} cases</div></div>
+    <div class="kpi danger"><div class="label">91–120 Days</div><div class="value" style="color:#c00000">${fmt(d.filter(r=>bucket(r.pendingDays)=='91-120').reduce((a,r)=>a+r.netApproval,0))}</div><div class="sub">${d.filter(r=>bucket(r.pendingDays)=='91-120').length} cases</div></div>
+    <div class="kpi danger" style="border-left-color:#8b0000"><div class="label">Above 120 Days Count</div><div class="value" style="color:#8b0000;font-size:26px;font-weight:900">${b120.length}</div><div class="sub" style="font-size:11px;font-weight:700;color:#d93025">${fmt(out120)}</div></div>
+  `;
+  renderTPABarChart(d);renderAgingPie(d);renderQtrEffChart();renderGauge(eff);renderTop10(d);
+}
+
+// ===== TPA COUNT BREAKUP (inline panel) =====
+function showTPABreakup(){
+  const panel=document.getElementById('tpa-breakup-panel');
+  const isOpen=panel.style.display!=='none';
+  if(isOpen){panel.style.display='none';return;}
+
+  const pending=getData().filter(r=>r.status=='Pending'&&r.pendingDays>30);
+  const tpaMap={};
+  pending.forEach(r=>{
+    if(!tpaMap[r.tpa])tpaMap[r.tpa]={'31-60':{c:0,a:0},'61-90':{c:0,a:0},'91-120':{c:0,a:0},'120+':{c:0,a:0},total:{c:0,a:0}};
+    const b=bucket(r.pendingDays);
+    tpaMap[r.tpa][b].c++;tpaMap[r.tpa][b].a+=r.netApproval;
+    tpaMap[r.tpa].total.c++;tpaMap[r.tpa].total.a+=r.netApproval;
+  });
+  const sorted=Object.entries(tpaMap).sort((a,b)=>b[1].total.a-a[1].total.a);
+  const buckets=['31-60','61-90','91-120','120+'];
+  const bColors={'31-60':'#f57f17','61-90':'#e65100','91-120':'#bf360c','120+':'#b71c1c'};
+  const bBg={'31-60':'#fff9c4','61-90':'#ffe0b2','91-120':'#ffccbc','120+':'#fce4ec'};
+
+  let html=`<div style="overflow-x:auto">
+  <table style="width:100%;font-size:12px;border-collapse:collapse">
+  <thead><tr style="background:#f0f7f3">
+    <th style="padding:8px 10px;border-bottom:2px solid var(--green);text-align:left">TPA Name</th>
+    <th style="padding:8px 10px;border-bottom:2px solid var(--green);text-align:center;background:#fff9c4">31–60 Days</th>
+    <th style="padding:8px 10px;border-bottom:2px solid var(--green);text-align:center;background:#ffe0b2">61–90 Days</th>
+    <th style="padding:8px 10px;border-bottom:2px solid var(--green);text-align:center;background:#ffccbc">91–120 Days</th>
+    <th style="padding:8px 10px;border-bottom:2px solid var(--green);text-align:center;background:#fce4ec">Above 120</th>
+    <th style="padding:8px 10px;border-bottom:2px solid var(--green);text-align:right;background:#f0f7f3">Total Cases</th>
+    <th style="padding:8px 10px;border-bottom:2px solid var(--green);text-align:right;background:#f0f7f3">Total Outstanding</th>
+  </tr></thead><tbody>`;
+
+  sorted.forEach(([tpa,v],i)=>{
+    html+=`<tr style="${i%2?'background:#fafafa':''}">
+      <td style="padding:7px 10px;font-size:11px;font-weight:600;border-bottom:1px solid var(--border)">${tpa}</td>`;
+    buckets.forEach(b=>{
+      const cell=v[b];
+      html+=`<td style="padding:7px 10px;text-align:center;border-bottom:1px solid var(--border);background:${cell.c?bBg[b]:''}">
+        ${cell.c?`<div style="font-weight:700;color:${bColors[b]}">${cell.c} cases</div><div style="font-size:10px;color:${bColors[b]}">${fmt(cell.a)}</div>`:'<span style="color:#ccc">–</span>'}
+      </td>`;
+    });
+    html+=`<td style="padding:7px 10px;text-align:right;font-weight:700;border-bottom:1px solid var(--border)">${v.total.c}</td>
+      <td style="padding:7px 10px;text-align:right;font-weight:700;color:#d93025;border-bottom:1px solid var(--border)">${fmt(v.total.a)}</td>
+    </tr>`;
+  });
+
+  // Totals row
+  const totals={};buckets.forEach(b=>totals[b]={c:0,a:0});let tc=0,ta=0;
+  sorted.forEach(([,v])=>{buckets.forEach(b=>{totals[b].c+=v[b].c;totals[b].a+=v[b].a;});tc+=v.total.c;ta+=v.total.a;});
+  html+=`<tr style="background:#f0f7f3;font-weight:700"><td style="padding:8px 10px">TOTAL</td>`;
+  buckets.forEach(b=>html+=`<td style="padding:8px 10px;text-align:center;color:${bColors[b]}">${totals[b].c?totals[b].c+' / '+fmt(totals[b].a):'–'}</td>`);
+  html+=`<td style="padding:8px 10px;text-align:right">${tc}</td><td style="padding:8px 10px;text-align:right;color:#d93025">${fmt(ta)}</td></tr>`;
+  html+=`</tbody></table></div>`;
+
+  document.getElementById('tpa-breakup-content').innerHTML=html;
+  panel.style.display='block';
+  panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function renderTPABarChart(d){
+  const m={};d.filter(r=>r.pendingDays>30).forEach(r=>{m[r.tpa]=(m[r.tpa]||0)+r.netApproval;});
+  const s=Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,12);
+  mkChart('tpaBarChart',{type:'bar',data:{labels:s.map(([t])=>t.length>22?t.slice(0,20)+'...':t),datasets:[{label:'Outstanding',data:s.map(([,v])=>v),backgroundColor:'rgba(201,0,0,0.65)',borderColor:'#8b0000',borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'Rs.'+Math.round(c.raw).toLocaleString('en-IN')}}},scales:{y:{ticks:{callback:v=>'Rs.'+(v/100000).toFixed(1)+'L'}},x:{ticks:{font:{size:10},maxRotation:40}}}}});
+}
+function renderAgingPie(d){
+  const b={'0-30':0,'31-60':0,'61-90':0,'91-120':0,'120+':0};
+  d.forEach(r=>{const bk=bucket(r.pendingDays);if(b[bk]!==undefined)b[bk]+=r.netApproval;});
+  mkChart('agingPieChart',{type:'doughnut',data:{labels:Object.keys(b),datasets:[{data:Object.values(b),backgroundColor:Object.values(BKT_COLORS),borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10}}},tooltip:{callbacks:{label:c=>'Rs.'+Math.round(c.raw).toLocaleString('en-IN')}}}}});
+}
+function renderQtrEffChart(){
+  const qtrs=['Q1','Q2','Q3','Q4'];
+  const datasets=ALL_FYS.map((fy,fi)=>{
+    const vals=qtrs.map(q=>{
+      const d=getData().filter(r=>getRecvFY(r.receivedDate)==fy&&r.quarter&&r.quarter.startsWith(q));
+      const recv=d.reduce((a,r)=>a+r.received,0),na=d.reduce((a,r)=>a+r.netApproval,0),tds=d.reduce((a,r)=>a+r.tds,0);
+      return na-tds>0?Math.round(recv/(na-tds)*100):0;
+    });
+    return{label:fy,data:vals,backgroundColor:FY_COLORS[fi%FY_COLORS.length]+'99',borderColor:FY_COLORS[fi%FY_COLORS.length],borderWidth:1};
+  });
+  mkChart('qtrEffChart',{type:'bar',data:{labels:['Q1 (Apr-Jun)','Q2 (Jul-Sep)','Q3 (Oct-Dec)','Q4 (Jan-Mar)'],datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.raw+'%'}}},scales:{y:{min:0,max:120,ticks:{callback:v=>v+'%'}},x:{ticks:{autoSkip:false}}}}});
+}
+function renderGauge(val){
+  const v=Math.min(100,Math.max(0,val));
+  mkChart('gaugeChart',{type:'doughnut',data:{datasets:[{data:[v,100-v],backgroundColor:[v>=85?'#00b050':v>=60?'#ffc000':'#c00000','#f0f0f0'],borderWidth:0,circumference:180,rotation:270}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{enabled:false}},cutout:'72%'}});
+  document.getElementById('gauge-pct').textContent=pct(v);
+}
+function renderTop10(d){
+  const m={};d.filter(r=>r.pendingDays>30).forEach(r=>{if(!m[r.tpa])m[r.tpa]={out:0,cases:0,days:[]};m[r.tpa].out+=r.netApproval;m[r.tpa].cases++;if(r.pendingDays>0)m[r.tpa].days.push(r.pendingDays);});
+  const rv={};getData().filter(r=>r.status=='Received').forEach(r=>{if(!rv[r.tpa])rv[r.tpa]={recv:0,na:0,tds:0};rv[r.tpa].recv+=r.received;rv[r.tpa].na+=r.netApproval;rv[r.tpa].tds+=r.tds;});
+  const sorted=Object.entries(m).sort((a,b)=>b[1].out-a[1].out).slice(0,10);
+  document.querySelector('#top10table tbody').innerHTML=sorted.map(([t,v],i)=>{
+    const r=rv[t]||{recv:0,na:v.out,tds:0};const allNA=r.na+v.out;const eff=allNA-r.tds>0?(r.recv/(allNA-r.tds)*100):0;
+    const avgD=v.days.length?v.days.reduce((a,b)=>a+b,0)/v.days.length:0;
+    const risk=v.out>500000?'<span class="badge risk">High Risk</span>':v.out>100000?'<span class="badge med">Medium</span>':'<span class="badge ok">Low</span>';
+    return '<tr><td>'+(i+1)+'</td><td style="font-size:11px">'+t+'</td><td style="font-weight:700;color:#d93025">'+fmt(v.out)+'</td><td>'+fmtN(v.cases)+'</td><td>'+Math.round(avgD)+'</td><td>'+pct(eff)+'</td><td>'+risk+'</td></tr>';
+  }).join('');
+}
+
+// ===== TPA WISE PAGE =====
+function renderTPAPage(){
+  const tpa=document.getElementById('tpa-filter-tpa').value;
+  const above30=document.getElementById('above30check').checked;
+  let d=getData().filter(r=>r.status=='Pending');
+  if(tpa!='all')d=d.filter(r=>r.tpa==tpa);
+  if(above30)d=d.filter(r=>r.pendingDays>30);
+  const m={};d.forEach(r=>{if(!m[r.tpa])m[r.tpa]={out:0,cases:0,days:[]};m[r.tpa].out+=r.netApproval;m[r.tpa].cases++;if(r.pendingDays>0)m[r.tpa].days.push(r.pendingDays);});
+  const rv={};getData().filter(r=>r.status=='Received').forEach(r=>{if(!rv[r.tpa])rv[r.tpa]={recv:0,na:0,tds:0};rv[r.tpa].recv+=r.received;rv[r.tpa].na+=r.netApproval;rv[r.tpa].tds+=r.tds;});
+  const sorted=Object.entries(m).sort((a,b)=>b[1].out-a[1].out);
+  const tpaRows=sorted.map(([t,v])=>{
+    const r=rv[t]||{recv:0,na:v.out,tds:0};const allNA=r.na+v.out;const eff=allNA-r.tds>0?(r.recv/(allNA-r.tds)*100):0;
+    const avgD=v.days.length?v.days.reduce((a,b)=>a+b,0)/v.days.length:0;
+    const maxD=v.days.length?Math.max(...v.days):0;
+    let bk='<span class="badge ok">0-30</span>';
+    if(maxD>120)bk='<span class="badge risk">Above 120</span>';else if(maxD>90)bk='<span class="badge med">91-120</span>';else if(maxD>60)bk='<span class="badge pending">61-90</span>';else if(maxD>30)bk='<span class="badge ok">31-60</span>';
+    return '<tr><td style="font-size:11px">'+t+'</td><td style="font-weight:700;color:#d93025">'+fmt(v.out)+'</td><td style="font-weight:600">'+fmtN(v.cases)+'</td><td>'+Math.round(avgD)+'</td><td>'+pct(eff)+'</td><td>'+bk+'</td></tr>';
+  });
+  const totalOutAmt=sorted.reduce((a,[,v])=>a+v.out,0);
+  const totalCases=sorted.reduce((a,[,v])=>a+v.cases,0);
+  const totalRow='<tr style="background:#e8f5e9;font-weight:700;border-top:2px solid #00b050"><td style="color:#007a36;font-size:12px">&#9654; TOTAL</td><td style="color:#d93025;font-size:14px">'+fmt(totalOutAmt)+'</td><td style="color:#007a36;font-size:14px">'+fmtN(totalCases)+'</td><td colspan="3" style="color:#6b7a8d;font-size:11px">Above 30 Days Outstanding</td></tr>';
+  document.querySelector('#tpaTable tbody').innerHTML=tpaRows.join('')+totalRow;
+  const m2={};getData().filter(r=>r.status=='Received'&&r.recoverDays>0).forEach(r=>{if(!m2[r.tpa])m2[r.tpa]=[];m2[r.tpa].push(r.recoverDays);});
+  const avg2=Object.fromEntries(Object.entries(m2).map(([t,v])=>[t,v.reduce((a,b)=>a+b,0)/v.length]));
+  const s2=Object.entries(avg2).sort((a,b)=>a[1]-b[1]).slice(0,15);
+  mkChart('recoveryChart',{type:'bar',data:{labels:s2.map(([t])=>t.length>18?t.slice(0,16)+'...':t),datasets:[{label:'Avg Recovery Days',data:s2.map(([,v])=>Math.round(v)),backgroundColor:s2.map(([,v])=>v>60?'rgba(201,0,0,0.7)':v>30?'rgba(255,150,0,0.7)':'rgba(0,176,80,0.7)'),borderWidth:1}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{title:{display:true,text:'Avg Recovery Days'}},y:{ticks:{font:{size:10}}}}}});
+}
+
+// ===== TPA PATIENT REPORT =====
+let tppPage=1;
+const PAGE_SIZE=50;
+
+function renderTPAPatientPage(){tppPage=1;drawTPAPatientTable();}
+
+function drawTPAPatientTable(){
+  const tpa=document.getElementById('tpp-tpa').value;
+  const st=document.getElementById('tpp-status').value;
+  const bkts=tppActiveBuckets();
+  const search=(document.getElementById('tpp-search').value||'').toLowerCase();
+  const groupBy=document.getElementById('tpp-groupby').checked;
+
+  let d=getData().filter(r=>{
+    if(tpa!='all'&&r.tpa!=tpa)return false;
+    if(st!='all'&&r.status!=st)return false;
+    if(bkts&&!bkts.includes(bucket(r.pendingDays)))return false;
+    if(search&&!r.patient.toLowerCase().includes(search)&&!r.uhid.toLowerCase().includes(search))return false;
+    return true;
+  });
+
+  const totalOut=d.filter(r=>r.status=='Pending').reduce((a,r)=>a+r.netApproval,0);
+  const totalRecv=d.reduce((a,r)=>a+r.received,0);
+  const pending=d.filter(r=>r.status=='Pending').length;
+  const received=d.filter(r=>r.status=='Received').length;
+  const tpaCount=new Set(d.map(r=>r.tpa)).size;
+
+  document.getElementById('tpp-count').textContent=d.length+' records | '+tpaCount+' TPAs';
+  document.getElementById('tpp-kpi').innerHTML=`
+    <div class="kpi danger"><div class="label">Outstanding</div><div class="value" style="color:#d93025;font-size:16px">${fmt(totalOut)}</div><div class="sub">${pending} pending</div></div>
+    <div class="kpi"><div class="label">Received</div><div class="value" style="color:#00b050;font-size:16px">${fmt(totalRecv)}</div><div class="sub">${received} cases</div></div>
+    <div class="kpi purple"><div class="label">TPA Count</div><div class="value" style="color:#7b2fbe">${tpaCount}</div></div>
+    <div class="kpi warn"><div class="label">Above 30 Days</div><div class="value" style="color:#e87722">${d.filter(r=>r.status=='Pending'&&r.pendingDays>30).length}</div><div class="sub">overdue pending</div></div>
+    <div class="kpi danger"><div class="label">Above 120 Days</div><div class="value" style="font-size:22px;color:#8b0000;font-weight:900">${d.filter(r=>r.status=='Pending'&&r.pendingDays>120).length}</div><div class="sub" style="color:#d93025;font-weight:700">${fmt(d.filter(r=>r.status=='Pending'&&r.pendingDays>120).reduce((a,r)=>a+r.netApproval,0))}</div></div>
+  `;
+
+  // TPA group summary cards
+  if(tpa==='all'){
+    const tpaGrp={};
+    d.forEach(r=>{
+      if(!tpaGrp[r.tpa])tpaGrp[r.tpa]={out:0,recv:0,cases:0,buckets:{'0-30':0,'31-60':0,'61-90':0,'91-120':0,'120+':0}};
+      if(r.status=='Pending'){tpaGrp[r.tpa].out+=r.netApproval;tpaGrp[r.tpa].buckets[bucket(r.pendingDays)]++;}
+      tpaGrp[r.tpa].recv+=r.received;tpaGrp[r.tpa].cases++;
+    });
+    const sortedGrp=Object.entries(tpaGrp).sort((a,b)=>b[1].out-a[1].out);
+    document.getElementById('tpp-tpa-summary').innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:14px">`+
+      sortedGrp.map(([t,v])=>{
+        const bPills=Object.entries(v.buckets).filter(([,c])=>c>0).map(([b,c])=>`<span class="badge ${BKT_CLASS[b]}" style="font-size:9px">${b}: ${c}</span>`).join(' ');
+        return `<div class="card" style="padding:10px 12px;border-top:3px solid ${v.out>500000?'#d93025':v.out>100000?'#e87722':'#00b050'}">
+          <div style="font-size:10px;font-weight:700;color:var(--muted);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${t}">${t}</div>
+          <div style="font-size:16px;font-weight:700;color:${v.out>0?'#d93025':'#00b050'}">${fmt(v.out)}</div>
+          <div style="font-size:10px;color:var(--muted);margin:2px 0">${v.cases} cases</div>
+          <div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:4px">${bPills||'<span style="font-size:10px;color:var(--muted)">All received</span>'}</div>
+        </div>`;
+      }).join('')+`</div>`;
+  } else {
+    document.getElementById('tpp-tpa-summary').innerHTML='';
+  }
+
+  // Table
+  d.sort((a,b)=>{
+    if(groupBy){const tc=a.tpa.localeCompare(b.tpa);if(tc!==0)return tc;}
+    const aAmt=a.status=='Pending'?a.netApproval:0;
+    const bAmt=b.status=='Pending'?b.netApproval:0;
+    return bAmt-aAmt;
+  });
+  const pages=Math.ceil(d.length/PAGE_SIZE);
+  const slice=d.slice((tppPage-1)*PAGE_SIZE,tppPage*PAGE_SIZE);
+
+  let prevTPA='',rows='',idx=0;
+  slice.forEach((r,i)=>{
+    const globalIdx=(tppPage-1)*PAGE_SIZE+i+1;
+    if(groupBy&&r.tpa!==prevTPA){
+      const tpaRows=d.filter(x=>x.tpa===r.tpa);
+      const tpaOut=tpaRows.filter(x=>x.status=='Pending').reduce((a,x)=>a+x.netApproval,0);
+      const tpaRecv=tpaRows.reduce((a,x)=>a+x.received,0);
+      rows+=`<tr class="tpa-section-row"><td colspan="13">&#127970; ${r.tpa} &nbsp;|&nbsp; ${tpaRows.length} cases &nbsp;|&nbsp; Outstanding: ${fmt(tpaOut)} &nbsp;|&nbsp; Received: ${fmt(tpaRecv)}</td></tr>`;
+      prevTPA=r.tpa;
+    }
+    const bk=bucket(r.pendingDays);
+    const bkBadge=`<span class="badge ${BKT_CLASS[bk]}">${bk}</span>`;
+    rows+=`<tr>
+      <td>${globalIdx}</td>
+      <td style="font-size:10px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.tpa}">${r.tpa.length>18?r.tpa.slice(0,16)+'...':r.tpa}</td>
+      <td style="font-weight:600">${r.patient}</td>
+      <td style="font-size:10px">${r.uhid}</td>
+      <td style="font-size:10px">${r.billDate}</td>
+      <td style="text-align:right">${fmt(r.billValue)}</td>
+      <td style="text-align:right">${fmt(r.netApproval)}</td>
+      <td style="text-align:right">${fmt(r.tds)}</td>
+      <td style="text-align:right;color:#00b050;font-weight:600">${fmt(r.received)}</td>
+      <td style="text-align:right;font-weight:700;color:${r.status=='Pending'?'#d93025':'#00b050'}">${fmt(r.status=='Pending'?r.netApproval:0)}</td>
+      <td style="text-align:center;font-weight:600;color:${r.pendingDays>120?'#8b0000':r.pendingDays>30?'#e65100':'#00b050'}">${r.status=='Pending'?r.pendingDays:'-'}</td>
+      <td style="text-align:center">${bkBadge}</td>
+      <td><span class="badge ${r.status=='Pending'?'pending':'received'}">${r.status}</span></td>
+    </tr>`;
+  });
+  document.querySelector('#tpaPatientTable tbody').innerHTML=rows;
+  document.getElementById('tpp-pager').innerHTML='<button onclick="tppPage=Math.max(1,tppPage-1);drawTPAPatientTable()" '+(tppPage<=1?'disabled':'')+'>← Prev</button><span>Page '+tppPage+' of '+Math.max(1,pages)+' ('+d.length+' records)</span><button onclick="tppPage=Math.min('+Math.max(1,pages)+',tppPage+1);drawTPAPatientTable()" '+(tppPage>=pages?'disabled':'')+'>Next →</button>';
+  window._tppData=d;
+}
+
+// ===== PATIENT PAGE =====
+let patientPage=1;
+function renderPatientTable(){patientPage=1;drawPatientTable();}
+function drawPatientTable(){
+  const search=(document.getElementById('patient-search').value||'').toLowerCase();
+  const tpa=document.getElementById('patient-tpa').value;
+  const st=document.getElementById('patient-status').value;
+  const bkts=ptActiveBuckets();
+  let d=getData().filter(r=>{
+    if(search&&!r.patient.toLowerCase().includes(search)&&!r.uhid.toLowerCase().includes(search))return false;
+    if(tpa!='all'&&r.tpa!=tpa)return false;
+    if(st!='all'&&r.status!=st)return false;
+    if(bkts&&!bkts.includes(bucket(r.pendingDays)))return false;
+    return true;
+  });
+  document.getElementById('patient-count').textContent=d.length+' records';
+  const pages=Math.ceil(d.length/PAGE_SIZE);
+  const slice=d.slice((patientPage-1)*PAGE_SIZE,patientPage*PAGE_SIZE);
+  const bk=r=>bucket(r.pendingDays);
+  document.querySelector('#patientTable tbody').innerHTML=slice.map((r,i)=>`<tr><td>${(patientPage-1)*PAGE_SIZE+i+1}</td><td>${r.patient}</td><td style="font-size:10px">${r.uhid}</td><td style="font-size:10px">${r.tpa.length>22?r.tpa.slice(0,20)+'...':r.tpa}</td><td style="text-align:right">${fmt(r.billValue)}</td><td style="text-align:right">${fmt(r.netApproval)}</td><td style="text-align:right">${fmt(r.tds)}</td><td style="text-align:right;color:#00b050">${fmt(r.received)}</td><td style="text-align:right;color:${r.status=='Pending'?'#d93025':'#00b050'};font-weight:600">${fmt(r.status=='Pending'?r.netApproval:0)}</td><td style="text-align:center">${r.status=='Pending'?r.pendingDays:'-'}</td><td><span class="badge ${BKT_CLASS[bk(r)]}">${bk(r)}</span></td><td><span class="badge ${r.status=='Pending'?'pending':'received'}">${r.status}</span></td></tr>`).join('');
+  document.getElementById('patient-pager').innerHTML='<button onclick="patientPage=Math.max(1,patientPage-1);drawPatientTable()" '+(patientPage<=1?'disabled':'')+'>← Prev</button><span>Page '+patientPage+' of '+Math.max(1,pages)+' ('+d.length+')</span><button onclick="patientPage=Math.min('+Math.max(1,pages)+',patientPage+1);drawPatientTable()" '+(patientPage>=pages?'disabled':'')+'>Next →</button>';
+}
+
+// ===== COLLECTION PAGE =====
+let colPage=1;
+function initCollectionDates(){document.getElementById('col-from').value='2025-04-01';document.getElementById('col-to').value='2026-03-31';}
+function renderCollectionReport(){colPage=1;drawCollectionTable();}
+function drawCollectionTable(){
+  const from=document.getElementById('col-from').value,to=document.getElementById('col-to').value;
+  const pS=(document.getElementById('col-patient').value||'').toLowerCase(),tS=(document.getElementById('col-tpa-s').value||'').toLowerCase();
+  const sort=document.getElementById('col-sort').value;
+  const fromD=from?new Date(from):null,toD=to?new Date(to+'T23:59:59'):null;
+  let d=getData().filter(r=>{
+    if(r.status!='Received'||!r.receivedDate)return false;
+    const p=r.receivedDate.split('-');if(p.length<3)return false;
+    const rd=new Date(p[2]+'-'+p[1]+'-'+p[0]);
+    if(fromD&&rd<fromD)return false;if(toD&&rd>toD)return false;
+    if(pS&&!r.patient.toLowerCase().includes(pS))return false;
+    if(tS&&!r.tpa.toLowerCase().includes(tS))return false;return true;
+  });
+  d.sort((a,b)=>{const pa=a.receivedDate.split('-'),pb=b.receivedDate.split('-');const da=new Date(pa[2]+'-'+pa[1]+'-'+pa[0]),db=new Date(pb[2]+'-'+pb[1]+'-'+pb[0]);return sort=='asc'?da-db:db-da;});
+  const total=d.reduce((a,r)=>a+r.received,0);
+  const dM={};d.forEach(r=>{dM[r.receivedDate]=(dM[r.receivedDate]||0)+r.received;});
+  const dS=Object.entries(dM).sort((a,b)=>{const pa=a[0].split('-'),pb=b[0].split('-');return new Date(pa[2]+'-'+pa[1]+'-'+pa[0])-new Date(pb[2]+'-'+pb[1]+'-'+pb[0]);});
+  const peak=dS.length?dS.reduce((a,b)=>b[1]>a[1]?b:a):['–',0];
+  document.getElementById('col-kpi').innerHTML='<div class="kpi"><div class="label">Total Collection</div><div class="value" style="color:#00b050">'+fmt(total)+'</div><div class="sub">'+d.length+' receipts</div></div><div class="kpi info"><div class="label">Avg per Receipt</div><div class="value">'+fmt(d.length?total/d.length:0)+'</div></div><div class="kpi warn"><div class="label">Peak Day</div><div class="value" style="font-size:14px">'+peak[0]+'</div><div class="sub">'+fmt(peak[1])+'</div></div><div class="kpi"><div class="label">Active Days</div><div class="value">'+dS.length+'</div></div>';
+  mkChart('colTrendChart',{type:'bar',data:{labels:dS.slice(-30).map(([d])=>d),datasets:[{label:'Daily Collection',data:dS.slice(-30).map(([,v])=>v),backgroundColor:'rgba(0,176,80,0.65)',borderColor:'#007a36',borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'Rs.'+Math.round(c.raw).toLocaleString('en-IN')}}},scales:{y:{ticks:{callback:v=>'Rs.'+(v/100000).toFixed(1)+'L'}},x:{ticks:{font:{size:9},maxRotation:45}}}}});
+  const pages=Math.ceil(d.length/PAGE_SIZE);
+  const slice=d.slice((colPage-1)*PAGE_SIZE,colPage*PAGE_SIZE);
+  document.querySelector('#collectionTable tbody').innerHTML=slice.map(r=>'<tr><td>'+r.receivedDate+'</td><td>'+r.patient+'</td><td style="font-size:10px">'+(r.tpa.length>30?r.tpa.slice(0,28)+'...':r.tpa)+'</td><td style="text-align:right;font-weight:700;color:#00b050">'+fmt(r.received)+'</td></tr>').join('')+'<tr style="background:#f0f7f3"><td colspan="3"><strong>Total</strong></td><td style="text-align:right;font-weight:700;color:#007a36">'+fmt(total)+'</td></tr>';
+  document.getElementById('col-pager').innerHTML='<button onclick="colPage=Math.max(1,colPage-1);drawCollectionTable()" '+(colPage<=1?'disabled':'')+'>← Prev</button><span>Page '+colPage+' of '+Math.max(1,pages)+' ('+d.length+')</span><button onclick="colPage=Math.min('+Math.max(1,pages)+',colPage+1);drawCollectionTable()" '+(colPage>=pages?'disabled':'')+'>Next →</button>';
+  window._colData=d;
+}
+
+// ===== AGING =====
+function renderAgingPage(){
+  const tpa=document.getElementById('aging-tpa').value,fy=document.getElementById('aging-fy').value;
+  let d=getData().filter(r=>r.status=='Pending'&&r.pendingDays>30);
+  if(tpa!='all')d=d.filter(r=>r.tpa==tpa);
+  if(fy!='all')d=d.filter(r=>getBillFY(r.billDate)==fy);
+  const buckets=['31-60','61-90','91-120','120+'],colors=['#ffc000','#ff6600','#c00000','#8b0000'];
+  const bD=buckets.map(b=>({bucket:b,cases:0,out:0,days:[]}));
+  d.forEach(r=>{const b=bucket(r.pendingDays);const bd=bD.find(x=>x.bucket==b);if(bd){bd.cases++;bd.out+=r.netApproval;bd.days.push(r.pendingDays);}});
+  const totalOut=bD.reduce((a,b)=>a+b.out,0);
+  document.getElementById('aging-kpi').innerHTML=bD.map((b,i)=>'<div class="kpi danger"><div class="label">'+b.bucket+' Days</div><div class="value" style="color:'+colors[i]+'">'+fmtN(b.cases)+'</div><div class="sub">'+fmt(b.out)+'</div></div>').join('');
+  mkChart('agingBarChart',{type:'bar',data:{labels:buckets,datasets:[{label:'Outstanding',data:bD.map(b=>b.out),backgroundColor:colors,borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'Rs.'+Math.round(c.raw).toLocaleString('en-IN')}}},scales:{y:{ticks:{callback:v=>'Rs.'+(v/100000).toFixed(1)+'L'}}}}});
+  mkChart('agingCaseChart',{type:'bar',data:{labels:buckets,datasets:[{label:'Cases',data:bD.map(b=>b.cases),backgroundColor:colors,borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}});
+  document.querySelector('#agingTable tbody').innerHTML=bD.map((b,i)=>{
+    const avgD=b.days.length?b.days.reduce((a,c)=>a+c,0)/b.days.length:0;
+    const risk=i>=3?'<span class="badge risk">Critical</span>':i>=2?'<span class="badge pending">High</span>':'<span class="badge med">Medium</span>';
+    return '<tr><td><strong>'+b.bucket+' Days</strong></td><td>'+fmtN(b.cases)+'</td><td style="font-weight:700;color:'+colors[i]+'">'+fmt(b.out)+'</td><td>'+(totalOut>0?pct(b.out/totalOut*100):'0%')+'</td><td>'+Math.round(avgD)+'</td><td>'+risk+'</td></tr>';
+  }).join('');
+}
+
+// ===== TREND =====
+function renderTrendPage(){
+  const fy=document.getElementById('trend-fy').value;
+  const mMap={};MONTHS.forEach(m=>mMap[m]={recv:0,cases:0});
+  getData().filter(r=>r.status=='Received'&&r.receivedDate).forEach(r=>{
+    const p=r.receivedDate.split('-');if(p.length<3)return;
+    const yr=parseInt(p[2]),mn=parseInt(p[1]),mname=MNAMES[mn];
+    const fyR=mn>=4?yr+'-'+String(yr+1).slice(-2):(yr-1)+'-'+String(yr).slice(-2);
+    if((fy=='all'||fyR==fy)&&mname&&mMap[mname]!==undefined){mMap[mname].recv+=r.received;mMap[mname].cases++;}
+  });
+  const vals=MONTHS.map(m=>mMap[m].recv),caseVals=MONTHS.map(m=>mMap[m].cases);
+  mkChart('trendChart',{type:'line',data:{labels:MONTHS,datasets:[{label:'Collection',data:vals,borderColor:'#00b050',backgroundColor:'rgba(0,176,80,0.1)',fill:true,tension:.3,yAxisID:'y'},{label:'Cases',data:caseVals,borderColor:'#0077cc',backgroundColor:'transparent',tension:.3,yAxisID:'y1',borderDash:[5,3]}]},options:{responsive:true,maintainAspectRatio:false,plugins:{tooltip:{callbacks:{label:c=>c.datasetIndex==0?'Rs.'+Math.round(c.raw).toLocaleString('en-IN'):c.raw+' cases'}}},scales:{y:{ticks:{callback:v=>'Rs.'+(v/100000).toFixed(1)+'L'},position:'left'},y1:{position:'right',grid:{drawOnChartArea:false}},x:{ticks:{autoSkip:false}}}}});
+  let cum=0;
+  document.querySelector('#trendTable tbody').innerHTML=MONTHS.map((m,i)=>{
+    const prev=i>0?mMap[MONTHS[i-1]].recv:0;const v=mMap[m].recv;cum+=v;
+    const mom=prev>0?((v-prev)/prev*100):0;
+    const momStr=v==0&&prev==0?'-':(mom>=0?'<span style="color:#00b050">+'+pct(mom)+'</span>':'<span style="color:#d93025">'+pct(mom)+'</span>');
+    return '<tr><td><strong>'+m+'</strong></td><td>'+fmtN(mMap[m].cases)+'</td><td>'+fmt(v)+'</td><td>'+fmt(cum)+'</td><td>'+momStr+'</td></tr>';
+  }).join('');
+}
+
+// ===== RANKING =====
+function renderRankingPage(){
+  const m={};
+  getData().forEach(r=>{
+    if(!m[r.tpa])m[r.tpa]={recvDays:[],cleared:0,pending:0,recv:0,na:0,tds:0};
+    if(r.status=='Received'){m[r.tpa].cleared++;if(r.recoverDays>0)m[r.tpa].recvDays.push(r.recoverDays);m[r.tpa].recv+=r.received;}
+    else m[r.tpa].pending++;
+    m[r.tpa].na+=r.netApproval;m[r.tpa].tds+=r.tds;
+  });
+  const ranked=Object.entries(m).filter(([,v])=>v.recvDays.length>0).map(([t,v])=>({tpa:t,avg:v.recvDays.reduce((a,b)=>a+b,0)/v.recvDays.length,cleared:v.cleared,pending:v.pending,recv:v.recv,na:v.na,tds:v.tds,eff:v.na-v.tds>0?(v.recv/(v.na-v.tds)*100):0})).sort((a,b)=>a.avg-b.avg);
+  const fast=ranked.slice(0,8),slow=[...ranked].sort((a,b)=>b.avg-a.avg).slice(0,8);
+  mkChart('fastChart',{type:'bar',data:{labels:fast.map(r=>r.tpa.length>18?r.tpa.slice(0,16)+'...':r.tpa),datasets:[{label:'Avg Days',data:fast.map(r=>Math.round(r.avg)),backgroundColor:'rgba(0,176,80,0.7)',borderWidth:1}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{title:{display:true,text:'Avg Recovery Days'}}}}});
+  mkChart('slowChart',{type:'bar',data:{labels:slow.map(r=>r.tpa.length>18?r.tpa.slice(0,16)+'...':r.tpa),datasets:[{label:'Avg Days',data:slow.map(r=>Math.round(r.avg)),backgroundColor:'rgba(201,0,0,0.65)',borderWidth:1}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{title:{display:true,text:'Avg Recovery Days'}}}}});
+  document.querySelector('#rankTable tbody').innerHTML=ranked.map((r,i)=>{
+    const perf=r.avg<=30?'<span class="badge received">Excellent</span>':r.avg<=60?'<span class="badge ok">Good</span>':r.avg<=90?'<span class="badge med">Average</span>':'<span class="badge risk">Slow</span>';
+    return '<tr><td style="font-weight:700;color:var(--green-dark)">'+(i+1)+'</td><td style="font-size:11px">'+r.tpa+'</td><td style="font-weight:700;color:'+(r.avg>60?'#d93025':'#00b050')+'">'+Math.round(r.avg)+'</td><td>'+fmtN(r.cleared)+'</td><td>'+fmtN(r.pending)+'</td><td>'+pct(r.eff)+'</td><td>'+perf+'</td></tr>';
+  }).join('');
+  document.getElementById('case-kpi').innerHTML='<div class="kpi"><div class="label">Total Cases</div><div class="value">'+fmtN(getData().length)+'</div></div><div class="kpi danger"><div class="label">Pending Cases</div><div class="value" style="color:#d93025">'+fmtN(getData().filter(r=>r.status=='Pending').length)+'</div></div><div class="kpi"><div class="label">Received Cases</div><div class="value" style="color:#00b050">'+fmtN(getData().filter(r=>r.status=='Received').length)+'</div></div><div class="kpi warn"><div class="label">Above 30 Days</div><div class="value" style="color:#e87722">'+fmtN(getData().filter(r=>r.status=='Pending'&&r.pendingDays>30).length)+'</div></div>';
+}
+
+// ===== INSIGHTS =====
+function renderInsightsPage(){
+  const pending=getData().filter(r=>r.status=='Pending');
+  const totalOut=pending.reduce((a,r)=>a+r.netApproval,0);
+  const above120=pending.filter(r=>r.pendingDays>120);
+  const above120Out=above120.reduce((a,r)=>a+r.netApproval,0);
+  const totalNA=getData().reduce((a,r)=>a+r.netApproval,0),totalTDS=getData().reduce((a,r)=>a+r.tds,0),totalRecv=getData().reduce((a,r)=>a+r.received,0);
+  const eff=totalNA-totalTDS>0?(totalRecv/(totalNA-totalTDS)*100):0;
+  const totalBill=getData().reduce((a,r)=>a+r.billValue,0);
+  const deductPct=totalBill>0?((totalBill-totalNA)/totalBill*100):0;
+  document.getElementById('insights-row').innerHTML=`<div class="insight ${eff>85?'good':'bad'}"><strong>Collection Efficiency</strong>Current efficiency is ${pct(eff)}. ${eff>85?'Target achieved.':'Below 85% target. Accelerate TPA follow-up.'}</div><div class="insight bad"><strong>Critical Pending Alert</strong>${above120.length} cases above 120 days. Outstanding: ${fmt(above120Out)}. Immediate escalation required.</div><div class="insight info2"><strong>Deduction Analysis</strong>Total deductions: ${pct(deductPct)} of bill value. TDS deducted: ${fmt(totalTDS)}.</div><div class="insight alert"><strong>Outstanding Risk</strong>Total pending: ${fmt(totalOut)}. ${pending.filter(r=>r.pendingDays>30).length} cases above 30 days.</div><div class="insight good"><strong>Recovery Trend</strong>${getData().filter(r=>r.status=='Received').length} cases cleared. Total collected: ${fmt(totalRecv)}.</div><div class="insight info2"><strong>TPA Performance</strong>${new Set(getData().map(r=>r.tpa).filter(t=>t&&t!='nan')).size} active TPAs. Focus on slow payers above 60 days.</div>`;
+  const m={};getData().forEach(r=>{if(!m[r.tpa])m[r.tpa]={bill:0,na:0,recv:0};m[r.tpa].bill+=r.billValue;m[r.tpa].na+=r.netApproval;m[r.tpa].recv+=r.received;});
+  const tpas=Object.entries(m).sort((a,b)=>b[1].na-a[1].na).slice(0,8);
+  mkChart('deductChart',{type:'bar',data:{labels:tpas.map(([t])=>t.length>16?t.slice(0,14)+'...':t),datasets:[{label:'Bill Value',data:tpas.map(([,v])=>v.bill),backgroundColor:'rgba(0,119,204,0.5)',borderWidth:1},{label:'Net Approval',data:tpas.map(([,v])=>v.na),backgroundColor:'rgba(0,176,80,0.5)',borderWidth:1},{label:'Received',data:tpas.map(([,v])=>v.recv),backgroundColor:'rgba(123,47,190,0.5)',borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{tooltip:{callbacks:{label:c=>'Rs.'+Math.round(c.raw).toLocaleString('en-IN')}}},scales:{y:{ticks:{callback:v=>'Rs.'+(v/100000).toFixed(1)+'L'}},x:{ticks:{font:{size:10}}}}}});
+  const buckets=['31-60','61-90','91-120','120+'];
+  mkChart('riskChart',{type:'doughnut',data:{labels:buckets,datasets:[{data:buckets.map(b=>pending.filter(r=>bucket(r.pendingDays)==b).length),backgroundColor:['#ffc000','#ff6600','#c00000','#8b0000'],borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10}}}}}});
+  document.querySelector('#riskTable tbody').innerHTML=above120.sort((a,b)=>b.pendingDays-a.pendingDays).slice(0,25).map(r=>'<tr><td>'+r.patient+'</td><td style="font-size:10px">'+r.uhid+'</td><td style="font-size:10px">'+(r.tpa.length>24?r.tpa.slice(0,22)+'...':r.tpa)+'</td><td style="font-weight:700;font-size:16px;color:#d93025">'+fmt(r.netApproval)+'</td><td style="font-size:11px;color:#8b0000;font-weight:600">'+r.pendingDays+' days</td><td><span class="badge risk">Escalate</span></td></tr>').join('');
+}
+
+// ===== EXPORTS =====
+function exportExcel(){
+  const rows=[['TPA','Patient','UHID','Bill Date','Bill Value','Net Approval','TDS','Outstanding','Pending Days','Bucket','Status']];
+  filteredData.forEach(r=>rows.push([r.tpa,r.patient,r.uhid,r.billDate,r.billValue,r.netApproval,r.tds,r.netApproval,r.pendingDays,bucket(r.pendingDays),r.status]));
+  const csv=rows.map(r=>r.map(v=>'"'+(v+'').replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);a.download='AVN_Outstanding_'+new Date().toISOString().slice(0,10)+'.csv';a.click();
+}
+function exportTPAPatientExcel(){
+  if(!window._tppData)return;
+  const rows=[['TPA','Patient','UHID','Bill Date','Bill Value','Net Approval','TDS','Received','Outstanding','Pending Days','Bucket','Status']];
+  window._tppData.forEach(r=>rows.push([r.tpa,r.patient,r.uhid,r.billDate,r.billValue,r.netApproval,r.tds,r.received,r.status=='Pending'?r.netApproval:0,r.status=='Pending'?r.pendingDays:'-',bucket(r.pendingDays),r.status]));
+  const csv=rows.map(r=>r.map(v=>'"'+(v+'').replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);a.download='AVN_TPA_Patient_Report_'+new Date().toISOString().slice(0,10)+'.csv';a.click();
+}
+function exportCollectionExcel(){
+  if(!window._colData)return;
+  const rows=[['Received Date','Patient','TPA','Amount']];
+  window._colData.forEach(r=>rows.push([r.receivedDate,r.patient,r.tpa,r.received]));
+  rows.push(['TOTAL','','',window._colData.reduce((a,r)=>a+r.received,0)]);
+  const csv=rows.map(r=>r.map(v=>'"'+(v+'').replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);a.download='AVN_Collection_'+new Date().toISOString().slice(0,10)+'.csv';a.click();
+}
+
+// ===== NAV =====
+function showPage(name,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('pg-'+name).classList.add('active');
+  if(btn)btn.classList.add('active');
+  if(name=='tpa')renderTPAPage();
+  if(name=='tpapatient')renderTPAPatientPage();
+  if(name=='collection')renderCollectionReport();
+  if(name=='aging')renderAgingPage();
+  if(name=='trend')renderTrendPage();
+  if(name=='ranking')renderRankingPage();
+  if(name=='insights')renderInsightsPage();
+}
+
+// ===== CORS GUIDE =====
+function showCORSGuide(){
+  document.getElementById('cors-guide').style.display='flex';
+}
+
+// ===== INIT =====
+function initDashboard(){
+  populateAll(true); // true = rebuild dropdowns
+  filteredData=getData().filter(r=>r.status=='Pending'&&r.pendingDays>30);
+  renderOverview();
+  initCollectionDates();
+}
+loadFromSheet(false);
+startAutoRefresh();
+</script>
+
+<!-- ===== WEEKLY PROMPT GUIDE MODAL ===== -->
+<div id="prompt-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;align-items:center;justify-content:center;overflow-y:auto">
+  <div style="background:#fff;border-radius:14px;padding:28px 32px;width:94%;max-width:860px;margin:20px auto;box-shadow:0 8px 40px rgba(0,0,0,.25);position:relative">
+    <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #00b050;padding-bottom:12px;margin-bottom:18px">
+      <div>
+        <h2 style="font-size:18px;font-weight:700;color:#007a36;margin:0">&#128196; Weekly Dashboard Rebuild — Full Prompt</h2>
+        <p style="font-size:11px;color:#6b7a8d;margin:4px 0 0">Copy this prompt every week when uploading the new CSV to Claude.ai</p>
+      </div>
+      <button onclick="document.getElementById('prompt-modal').style.display='none'" style="background:#d93025;color:#fff;border:none;border-radius:8px;padding:6px 16px;font-size:13px;font-weight:700;cursor:pointer">&#10005; Close</button>
+    </div>
+
+    <!-- HOW TO USE -->
+    <div style="background:#e8f5e9;border-radius:8px;padding:14px 16px;margin-bottom:16px;border-left:4px solid #00b050">
+      <div style="font-size:12px;font-weight:700;color:#007a36;margin-bottom:8px">&#9654; HOW TO USE EVERY WEEK</div>
+      <ol style="font-size:12px;color:#1a2332;line-height:1.9;margin-left:18px">
+        <li>Export the updated <strong>Insurance Outstanding CSV</strong> from your system</li>
+        <li>Open <strong>claude.ai</strong> → New conversation</li>
+        <li>Click the <strong>paperclip / attachment</strong> icon and upload the CSV file</li>
+        <li>Copy the <strong>full prompt below</strong> and paste it into the chat</li>
+        <li>Wait ~60 seconds → Download the new <strong>HTML dashboard</strong></li>
+        <li>Open in any browser — works offline, no installation needed</li>
+      </ol>
+    </div>
+
+    <!-- PROMPT BOX -->
+    <div style="margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:12px;font-weight:700;color:#007a36">&#128203; FULL PROMPT (copy everything below)</div>
+      <button onclick="copyPrompt()" id="copy-btn" style="background:#0077cc;color:#fff;border:none;border-radius:6px;padding:6px 16px;font-size:12px;font-weight:700;cursor:pointer">&#128203; Copy Prompt</button>
+    </div>
+    <textarea id="weekly-prompt" readonly style="width:100%;height:460px;font-family:monospace;font-size:11px;border:2px solid #00b050;border-radius:8px;padding:14px;background:#f9fffe;color:#1a2332;resize:vertical;line-height:1.6">I have uploaded an Insurance Outstanding Breakup CSV file for AVN Arogya Healthcare Pvt Ltd. Please build the exact same interactive HTML dashboard as before with ALL the following specifications:
+
+COMPANY DETAILS:
+- Company: AVN Arogya Healthcare Pvt Ltd
+- Presented by: Accounts Dept
+- Date: [update today date e.g. 03rd May 2026]
+
+DATA RULES:
+- Exclude TPA names: Reject, G Money, GMoney, Unknown
+- Total Outstanding = SUM(Net Approval) WHERE Status=Pending AND PendingDays > 30
+- Collection Efficiency = Received ÷ (Net Approval − TDS) × 100
+- Financial Year = April to March
+- PendingDays = Date 03rd May 2026 minus Bill Date
+- Outstanding = Net Approval (for pending rows only)
+
+NAVIGATION — 9 TABS:
+1. Overview
+2. TPA Wise
+3. TPA Patient Report
+4. Patient Search
+5. Collection Report
+6. Aging Buckets
+7. Trends
+8. TPA Ranking
+9. Insights
+
+TAB 1 — OVERVIEW:
+- Header: Company name, report title "Insurance Outstanding — Above 30 Days Pending Report", date, Accounts Dept (NO live clock, NO FY:Apr-Mar text)
+- FY filter defaults to All Years (auto-detect all FYs from data)
+- Quarter filter, TPA filter dropdowns (auto-populated)
+- NO bucket multi-select pills on overview page
+- 8 KPI cards:
+  1. Total Outstanding (above 30 days pending NA) — red
+  2. Above 120 Days amount (large font) + case count (bold red sub)
+  3. Avg Recovery Days
+  4. TPA Count (above 30 days only, CLICKABLE → shows breakup table below)
+  5. 31–60 Days bucket amount + cases
+  6. 61–90 Days bucket amount + cases
+  7. 91–120 Days bucket amount + cases
+  8. Above 120 Days count (very large bold number) + amount as sub
+- TPA Count breakup: inline expand panel (not modal), matrix table of TPA vs bucket (31-60/61-90/91-120/120+) showing cases + amount per cell, totals row
+- Charts: TPA Outstanding bar (red), Aging bucket doughnut (above 30 only), Quarter-wise Collection Efficiency bar (all FYs overlaid, auto-detected), Efficiency Gauge, Top 10 Outstanding TPA table
+- On first open AND reset: show All Years, above 30 days pending only (Rs.1,771,639)
+
+TAB 2 — TPA WISE:
+- Checkbox: show only above 30 days (default checked)
+- Table: TPA Name | Outstanding ₹ | No. of Cases | Avg Recovery Days | Efficiency % | Bucket Status
+- GREEN TOTAL row at bottom: sum of Outstanding ₹ + No. of Cases
+- Recovery days horizontal bar chart (colour coded: green <30, orange 30-60, red >60)
+
+TAB 3 — TPA PATIENT REPORT:
+- Filters: TPA (default All), Status (default Pending), Bucket pills, Patient search, Group by TPA checkbox
+- Bucket pills: [0-30 INACTIVE/unselected] [31-60 active] [61-90 active] [91-120 active] [Above 120 active]
+- If all deactivated → reset to 4 above-30 pills active (0-30 stays inactive)
+- 5 KPI cards: Outstanding, Received, TPA Count, Above 30 Days cases, Above 120 Days (large count + amount)
+- TPA summary cards grid (when All TPAs) — each card shows TPA name, outstanding, cases, bucket badges
+- Patient table: grouped by TPA with green section header rows showing TPA subtotals
+- Sorted: Outstanding highest to lowest (Net Approval descending for pending)
+- Columns: #, TPA, Patient Name, UHID, Bill Date, Bill Value, Net Approval, TDS, Received, Outstanding, Pending Days, Bucket, Status
+- Paginated 50 per page, Export CSV button
+
+TAB 4 — PATIENT SEARCH:
+- Search by name/UHID, TPA filter, Status filter
+- Bucket pills: ALL 5 active by default (0-30/31-60/61-90/91-120/120+)
+- Paginated table 50 per page
+- Columns: #, Patient, UHID, TPA, Bill Amount, Net Approval, TDS, Received, Outstanding, Pending Days, Bucket, Status
+
+TAB 5 — COLLECTION REPORT:
+- Date range filter (default current FY), patient search, TPA search, sort asc/desc
+- 4 KPIs: Total Collection, Avg per Receipt, Peak Day, Active Days
+- Date-wise bar chart (last 30 days)
+- Paginated table with grand total row, Export CSV
+
+TAB 6 — AGING BUCKETS:
+- TPA filter + FY filter (auto-populated, default All)
+- 4 KPI cards (31-60, 61-90, 91-120, 120+)
+- Outstanding amount bar chart + Case count bar chart (both coloured by severity)
+- Detail table: Bucket | Cases | Outstanding ₹ | % of Total | Avg Days | Risk badge
+
+TAB 7 — TRENDS:
+- FY filter defaults to All Years (auto-detect from data, auto-populate dropdown)
+- Monthly bar+line chart (Apr-Mar axis, Apr=first month)
+- Month-wise table: Month | Cases | Collection ₹ | Cumulative ₹ | MoM Change %
+
+TAB 8 — TPA RANKING:
+- Fastest Paying TPAs horizontal bar (green)
+- Slowest Paying TPAs horizontal bar (red)
+- Full ranking table: Rank | TPA | Avg Recovery Days | Cleared | Pending | Efficiency % | Performance badge
+- Case Count Dashboard: Total Cases | Pending | Received | Above 30 Days
+
+TAB 9 — INSIGHTS:
+- 6 insight cards: Collection Efficiency, Critical Pending Alert, Deduction Analysis, Outstanding Risk, Recovery Trend, TPA Performance
+- Deduction Analysis grouped bar chart (Bill Value vs Net Approval vs Received, top 8 TPAs)
+- Risk distribution doughnut (above 30 days buckets)
+- High-risk table (above 120 days): Patient | UHID | TPA | Outstanding ₹ (large font) | Days | Escalate badge
+
+TECHNICAL:
+- Single self-contained HTML file (no external files)
+- Chart.js 4.4.1 from cdnjs.cloudflare.com
+- All data embedded as JS array
+- Auto-detect Financial Years from both bill dates and received dates
+- All FY dropdowns auto-populated (never hardcode year values)
+- Theme: dark green gradient header (#003d1a → #006b2e → #00a84f), green accent #00b050
+- Red #d93025 for danger/outstanding amounts
+- Card shadows, rounded corners, hover effects
+- Export CSV buttons (Overview filtered data + Collection Report)
+- Print/PDF button in header
+- Paginated tables 50 rows per page with prev/next</textarea>
+
+    <!-- TIPS -->
+    <div style="background:#fff3cd;border-radius:8px;padding:12px 16px;margin-top:14px;border-left:4px solid #f9ab00">
+      <div style="font-size:11px;font-weight:700;color:#e65100;margin-bottom:6px">&#9888; WEEKLY TIPS</div>
+      <ul style="font-size:11px;color:#1a2332;line-height:1.8;margin-left:16px">
+        <li>Update the <strong>date</strong> in the prompt before pasting (e.g. "03rd May 2026" → "10th May 2026")</li>
+        <li>Update <strong>PendingDays calculation date</strong> to match (same date as above)</li>
+        <li>Always upload the CSV <strong>before</strong> pasting the prompt</li>
+        <li>Use <strong>Claude Sonnet</strong> model for best results</li>
+        <li>If output is cut off, type <strong>"continue"</strong> and Claude will finish</li>
+        <li>Save this HTML file — it contains the prompt so you never lose it</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script>
+function copyPrompt(){
+  const ta=document.getElementById('weekly-prompt');
+  ta.select();ta.setSelectionRange(0,99999);
+  navigator.clipboard.writeText(ta.value).then(()=>{
+    const btn=document.getElementById('copy-btn');
+    btn.textContent='✓ Copied!';btn.style.background='#00b050';
+    setTimeout(()=>{btn.textContent='📋 Copy Prompt';btn.style.background='#0077cc';},2500);
+  }).catch(()=>{document.execCommand('copy');});
+}
+
+
+document.getElementById('prompt-text').value = `I have uploaded an Insurance Outstanding CSV file for AVN Arogya Healthcare Pvt Ltd.
+
+Please build a single self-contained interactive HTML dashboard file with the following exact specifications:
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+COMPANY DETAILS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Company: AVN Arogya Healthcare Pvt Ltd
+Presented by: Accounts Dept
+Date: [today's date e.g. 03rd May 2026]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DATA RULES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Exclude TPA names: Reject, G Money, GMoney, Unknown
+- Total Outstanding = SUM(Net Approval) WHERE Status=Pending AND PendingDays > 30
+- Collection Efficiency = Received ÷ (Net Approval − TDS) × 100
+- Financial Year = April to March
+- PendingDays = Date 03-May-2026 minus Bill Date
+- On first load: show All Years, above 30 days pending only (Rs.1,771,639)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CSV COLUMN MAPPING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Sl.No. | TPA Name | Insurance Company Name | Patient Name | UHID
+Bill Date | Bill Value | Net Approval | TDS | Received | Status
+Received Date | Recover Days | Month | Month.1 (Quarter) | Amount
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+NAVIGATION TABS (9 total)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Overview
+2. TPA Wise
+3. TPA Patient Report
+4. Patient Search
+5. Collection Report
+6. Aging Buckets
+7. Trends
+8. TPA Ranking
+9. Insights
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TAB 1 — OVERVIEW
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- FY filter: defaults to All Years (auto-detect from data, NO hardcoding)
+- Quarter filter, TPA filter — NO bucket multi-select on overview
+- filteredData = Status=Pending AND PendingDays>30 always (on load, on reset, on filter)
+
+8 KPI Cards:
+  1. Total Outstanding (above 30 days NA) — red value
+  2. Above 120 Days — amount (large font) + case count (large bold red)
+  3. Avg Recovery Days
+  4. TPA Count (30+ pending only) — CLICKABLE → expands inline breakup table
+     (TPA vs bucket matrix: 31-60 / 61-90 / 91-120 / 120+ with cases + amounts per cell, total row)
+  5. 31–60 Days bucket (amount + cases)
+  6. 61–90 Days bucket (amount + cases)
+  7. 91–120 Days bucket (amount + cases)
+  8. Above 120 Days Count (large number + amount sub)
+
+Charts:
+- TPA Outstanding bar chart (above 30 days, top 12)
+- Aging Bucket doughnut pie (31-60/61-90/91-120/120+)
+- Collection Efficiency Quarter-wise grouped bar (all FYs overlaid, Q1-Q4)
+- Gauge meter (overall efficiency %)
+- Top 10 Outstanding TPA table (Outstanding/Cases/Avg Days/Efficiency/Risk badge)
+
+Buttons: Reset | Export Excel | Export PDF
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TAB 2 — TPA WISE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Filters: TPA dropdown, checkbox "Show only above 30 days" (checked by default)
+- Table columns: TPA Name | Outstanding (₹) | No. of Cases | Avg Recovery Days | Efficiency % | Bucket Status
+- GREEN TOTAL ROW at bottom: sum of Outstanding + No. of Cases, label "Above 30 Days Outstanding"
+- Recovery Days comparison horizontal bar chart (colour coded: green<30, orange 31-60, red>60)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TAB 3 — TPA PATIENT REPORT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Filters:
+- TPA dropdown (default: All TPAs)
+- Status (default: Pending selected)
+- Bucket pills: [0–30 Days INACTIVE/unselected] [31–60 active] [61–90 active] [91–120 active] [Above 120 active]
+  * Click any pill to toggle; if all deactivated, resets to 4 above-30 active (0-30 stays inactive)
+- Patient/UHID search box
+- Record count display
+- Export Excel button
+
+5 KPI cards: Outstanding | Received | TPA Count | Above 30 Days | Above 120 Days (large count + amount)
+
+TPA Summary Cards (when All TPAs selected):
+- One card per TPA showing: name, outstanding amount, case count, bucket badge breakdown
+- Cards sorted by outstanding (highest first)
+- Border colour: red>5L, orange>1L, green otherwise
+
+Patient Detail Table (paginated 50/page):
+- Columns: # | TPA Name | Patient Name | UHID | Bill Date | Bill Value | Net Approval | TDS | Received | Outstanding | Pending Days | Bucket | Status
+- Group by TPA toggle checkbox → section header row per TPA with subtotals
+- Sorted: Outstanding highest to lowest (Pending NA descending)
+- Bucket colour-coded badges: 0-30 green, 31-60 yellow, 61-90 orange, 91-120 red-orange, 120+ dark red
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TAB 4 — PATIENT SEARCH
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Search by patient name or UHID
+- Filters: TPA dropdown, Status, Bucket pills (all 5 active by default including 0-30)
+- Paginated table 50/page: # | Patient | UHID | TPA | Bill Amount | Net Approval | TDS | Received | Outstanding | Pending Days | Bucket | Status
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TAB 5 — COLLECTION REPORT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Date range filter (default: current FY Apr 1 to Mar 31)
+- Patient search, TPA search, Date sort (asc/desc)
+- 4 KPIs: Total Collection | Avg per Receipt | Peak Day | Active Days
+- Date-wise bar chart (last 30 days of filtered data)
+- Paginated collection table with TOTAL row at bottom
+- Export CSV button
+- Data source: Status=Received rows, amount from Received column
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TAB 6 — AGING BUCKETS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Filters: TPA dropdown, FY dropdown (auto-populated, default All Years)
+- 4 KPI cards: 31-60 / 61-90 / 91-120 / 120+ (cases + amount each)
+- Outstanding bar chart (4 buckets, colour coded)
+- Case count bar chart
+- Detail table: Bucket | Cases | Outstanding | % of Total | Avg Days | Risk Level badge
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TAB 7 — TRENDS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- FY filter: defaults to All Years (auto-populated from data)
+- Monthly bar+line chart (Apr-Mar axis, collection bars + cases line dual axis)
+- Month-wise table: Month | Cases | Collection | Cumulative | MoM Change %
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TAB 8 — TPA RANKING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Fastest Paying TPAs horizontal bar chart (green, top 8 by avg recovery days asc)
+- Slowest Paying TPAs horizontal bar chart (red, top 8 by avg recovery days desc)
+- Full Performance Ranking table: Rank | TPA | Avg Recovery Days | Cases Cleared | Cases Pending | Efficiency % | Performance badge
+- Case Count Dashboard KPIs: Total Cases | Pending | Received | Above 30 Days
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TAB 9 — INSIGHTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- 6 insight cards: Efficiency (green/red based on >85%) | Critical Pending Alert | Deduction Analysis | Outstanding Risk | Recovery Trend | TPA Performance
+- Deduction Analysis grouped bar chart: Bill Value vs Net Approval vs Received (top 8 TPAs)
+- Pending Risk doughnut pie (4 above-30 buckets)
+- High-Risk table (above 120 days): Patient | UHID | TPA | Outstanding (large font 16px) | Pending Days | Escalate badge
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DESIGN & TECHNICAL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Single HTML file, self-contained
+- Chart.js 4.4.1 from cdnjs.cloudflare.com
+- Header: dark green gradient, company name bold, date right-aligned
+- Theme: --green #00b050, danger red #d93025, warning orange #e87722, info blue #0077cc, purple #7b2fbe
+- Background: #f4f6f9, cards white with border-radius 10px
+- Bucket badge colours: 0-30 green, 31-60 yellow, 61-90 orange, 91-120 red-orange, 120+ dark red
+- All FY dropdowns auto-populated by scanning bill dates + received dates in data
+- Paginated tables: 50 rows per page with Prev/Next
+- Export buttons: Overview (CSV), TPA Patient (CSV), Collection (CSV)
+- Print/PDF button in overview
+- Responsive grid layout (auto-fit columns)
+- No live clock, no FY:Apr-Mar text in header`;
+function copyPrompt(){
+  const ta = document.getElementById('prompt-text');
+  ta.select();
+  document.execCommand('copy');
+  const btn = document.getElementById('copy-btn');
+  btn.textContent = '✓ Copied!';
+  btn.style.background = '#007a36';
+  setTimeout(()=>{ btn.textContent = '📋 Copy Full Prompt'; btn.style.background = '#00b050'; }, 2500);
+}
+
+</script>
+
+
+<!-- ===== WEEKLY PROMPT MODAL ===== -->
+<div id="prompt-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:2000;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto">
+  <div style="background:#fff;border-radius:12px;width:100%;max-width:860px;margin:0 auto;box-shadow:0 8px 40px rgba(0,0,0,.25)">
+    <div style="background:linear-gradient(135deg,#003d1a,#00a84f);color:#fff;padding:16px 20px;border-radius:12px 12px 0 0;display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-size:16px;font-weight:700">&#128196; Weekly Dashboard Rebuild Prompt</div>
+        <div style="font-size:11px;opacity:.85;margin-top:3px">Use this every week with the new CSV file on Claude.ai</div>
+      </div>
+      <button onclick="document.getElementById('prompt-modal').style.display='none'" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:6px;padding:5px 14px;cursor:pointer;font-size:12px;font-weight:700">&#10005; Close</button>
+    </div>
+    <div style="padding:18px 20px">
+      <div style="background:#e8f5e9;border:1px solid #00b050;border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:#1b5e20">
+        <strong>&#128197; How to use every week:</strong><br>
+        1. Export updated CSV from your system &nbsp;|&nbsp;
+        2. Go to <strong>claude.ai</strong> &nbsp;|&nbsp;
+        3. Upload the new CSV &nbsp;|&nbsp;
+        4. Copy &amp; paste the prompt below &nbsp;|&nbsp;
+        5. Download the new HTML dashboard
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-bottom:8px">
+        <button onclick="copyPrompt()" id="copy-btn" style="background:#00b050;color:#fff;border:none;border-radius:6px;padding:7px 18px;cursor:pointer;font-size:12px;font-weight:700">&#128203; Copy Full Prompt</button>
+      </div>
+      <textarea id="prompt-text" readonly style="width:100%;height:520px;border:1px solid #e0e6ed;border-radius:8px;padding:12px;font-size:11px;font-family:monospace;line-height:1.6;color:#1a2332;background:#fafafa;resize:vertical"></textarea>
+    </div>
+  </div>
+</div>
+
+</body></html>
