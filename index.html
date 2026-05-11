@@ -406,7 +406,7 @@ input[type=text]:focus,input[type=date]:focus,select:focus{outline:none;border-c
 // GOOGLE SHEETS LIVE getData() LOADER
 // ═══════════════════════════════════════════════════
 // Paste your Google Apps Script Web App URL below:
-const APPS_SCRIPT_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ30_oWv1o8THapmgPnwLJjKecFe_NPdQzVHeM50OMHFf7Z2g5JPJfOdTn_b9o--kTFwy7FWSN4xB1v/pub?gid=0&single=true&output=csv';
+const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ30_oWv1o8THapmgPnwLJjKecFe_NPdQzVHeM50OMHFf7Z2g5JPJfOdTn_b9o--kTFwy7FWSN4xB1v/pub?gid=0&single=true&output=csv';
 // Refresh interval in minutes (0 = no auto refresh)
 const REFRESH_MINUTES = 5;
 
@@ -530,61 +530,84 @@ function rebuildDropdowns(){
 
 // ── main fetch ─────────────────────────────────────
 async function loadFromSheet(isRefresh){
-  const isConfigured = APPS_SCRIPT_URL && APPS_SCRIPT_URL !== 'YOUR_APPS_SCRIPT_URL_HERE';
-  // Also detect file:// protocol — fetch() is blocked on local files
-  const isLocalFile = window.location.protocol === 'file:';
-
-  if(!isConfigured || isLocalFile){
-    // Use fallback embedded data (no network request)
-    ALL_DATA = FALLBACK_DATA;
-    rebuildDropdowns();
-    filteredData = getData().filter(r=>r.status=='Pending'&&r.pendingDays>30);
-    renderOverview();
-    initCollectionDates();
-    if(isConfigured && isLocalFile){
-      showBanner('ℹ Opened as local file — live data disabled. Upload to Netlify/GitHub for live updates.','#0077cc');
-    } else {
-      showBanner('ℹ Using embedded data. Set APPS_SCRIPT_URL for live Google Sheets connection.','#0077cc');
-    }
-    setTimeout(()=>{ const b=document.getElementById('_banner'); if(b) b.style.display='none'; },7000);
+  // Cannot fetch from file:// protocol — use embedded data
+  if(window.location.protocol === 'file:'){
+    _useEmbedded('Opened as local file. Upload to Netlify/GitHub Pages for live data.');
     return;
   }
 
-  showSpinner((isRefresh?'Refreshing':'Loading')+' live data from Google Sheets...');
+  // No URL configured — use embedded data
+  const url = (typeof SHEET_CSV_URL !== 'undefined') ? SHEET_CSV_URL : '';
+  if(!url || url === 'YOUR_PUBLISHED_CSV_URL_HERE'){
+    _useEmbedded('No Google Sheet URL set. Using embedded data.');
+    return;
+  }
 
-  try {
-    const url = APPS_SCRIPT_URL + (APPS_SCRIPT_URL.includes('?')?'&':'?') + 'cb='+Date.now();
-    const resp = await fetch(url, { signal: AbortSignal.timeout(20000) });
-    if(!resp.ok) throw new Error('HTTP '+resp.status+' — check Apps Script URL and deployment');
-    const text = await resp.text();
-    if(!text||text.trim().length<10) throw new Error('Empty response from Apps Script');
-    let raw;
-    try { raw = JSON.parse(text.trim()); }
-    catch(e){ throw new Error('Invalid JSON from Apps Script. Check the doGet() function returns JSON.'); }
-    if(!Array.isArray(raw)||raw.length===0) throw new Error('No data rows returned. Check sheet has data.');
-    ALL_DATA = buildRowsFromJSON(raw);
-    rebuildDropdowns();
-    filteredData = getData().filter(r=>r.status=='Pending'&&r.pendingDays>30);
-    renderOverview();
-    initCollectionDates();
-    setLastUpdated();
-    hideSpinner();
-    showBanner('✓ Live data loaded — '+ALL_DATA.length+' rows', '#00b050');
-    if(!_refreshTimer && REFRESH_MINUTES>0){
-      _refreshTimer = setInterval(()=>loadFromSheet(true), REFRESH_MINUTES*60000);
+  showSpinner((isRefresh ? 'Refreshing' : 'Loading') + ' data from Google Sheets...');
+
+  // Try direct first (works on Netlify/GitHub), then CORS proxies
+  const ATTEMPTS = [
+    url + (url.includes('?') ? '&' : '?') + '_cb=' + Date.now(),
+    'https://corsproxy.io/?'      + encodeURIComponent(url),
+    'https://api.allorigins.win/raw?url=' + encodeURIComponent(url),
+  ];
+
+  for(let i = 0; i < ATTEMPTS.length; i++){
+    try{
+      const resp = await fetch(ATTEMPTS[i], { signal: AbortSignal.timeout(18000) });
+      if(!resp.ok) throw new Error('HTTP ' + resp.status);
+      const text = await resp.text();
+      if(!text || text.trim().length < 20) throw new Error('Empty response');
+
+      // Parse — auto-detect CSV vs JSON
+      const trimmed = text.trim();
+      let raw;
+      if(trimmed.startsWith('[') || trimmed.startsWith('{')){
+        raw = JSON.parse(trimmed);
+      } else if(trimmed.startsWith('<')){
+        // Got HTML instead of CSV — wrong URL format
+        throw new Error('Got HTML instead of CSV. URL must end with output=csv (not pubhtml)');
+      } else {
+        raw = parseCSVText(trimmed);
+      }
+
+      if(!raw || raw.length === 0) throw new Error('No data rows found in sheet');
+
+      ALL_DATA = buildRows(raw);
+      console.log('Loaded ' + ALL_DATA.length + ' rows (attempt ' + (i+1) + ')');
+      rebuildDropdowns();
+      filteredData = getData().filter(r => r.status == 'Pending' && r.pendingDays > 30);
+      renderOverview();
+      initCollectionDates();
+      setLastUpdated();
+      hideSpinner();
+      showBanner('✓ Live data loaded — ' + ALL_DATA.length + ' rows', '#00b050');
+      if(REFRESH_MINUTES > 0 && !_refreshTimer){
+        _refreshTimer = setInterval(() => loadFromSheet(true), REFRESH_MINUTES * 60000);
+      }
+      return;
+
+    } catch(e){
+      console.warn('Attempt ' + (i+1) + ' failed:', e.message);
+      if(i === ATTEMPTS.length - 1){
+        hideSpinner();
+        console.error('All attempts failed:', e.message);
+        _useEmbedded('Live fetch failed: ' + e.message + ' — using embedded data.');
+      }
     }
-  } catch(e) {
-    hideSpinner();
-    console.error('Fetch error:', e);
-    // Fall back to embedded data
-    ALL_DATA = FALLBACK_DATA;
-    rebuildDropdowns();
-    filteredData = getData().filter(r=>r.status=='Pending'&&r.pendingDays>30);
-    renderOverview();
-    initCollectionDates();
-    showBanner('⚠ Live fetch failed: '+e.message+' — showing embedded data. <a href="#" onclick="loadFromSheet(false);return false;" style="color:#fff;text-decoration:underline">Retry</a>','#e87722');
   }
 }
+
+function _useEmbedded(msg){
+  ALL_DATA = FALLBACK_DATA;
+  rebuildDropdowns();
+  filteredData = getData().filter(r => r.status == 'Pending' && r.pendingDays > 30);
+  renderOverview();
+  initCollectionDates();
+  showBanner('ℹ ' + msg, '#0077cc');
+  setTimeout(() => { const b = document.getElementById('_banner'); if(b) b.style.display = 'none'; }, 8000);
+}
+
 
 function manualRefresh(){ if(_refreshTimer){clearInterval(_refreshTimer);_refreshTimer=null;} loadFromSheet(true); }
 
